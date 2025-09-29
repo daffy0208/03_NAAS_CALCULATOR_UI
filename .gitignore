@@ -86,5 +86,13 @@ code_sandbox_*/
 
 # Specific to this project
 *.xlsx
+*.xls
 *.zip
 Renders/
+
+# Test outputs
+tests/reports/*.json
+tests/reports/**/*.json
+
+# Additional files
+*.log
