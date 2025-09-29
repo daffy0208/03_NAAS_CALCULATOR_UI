@@ -1,0 +1,72 @@
+# Netlify Configuration for NaaS Calculator
+
+[build]
+  # Build command
+  command = "npm run build"
+
+  # Directory to publish
+  publish = "dist"
+
+  # Functions directory (if needed)
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "18"
+
+  # NPM version
+  NPM_VERSION = "9"
+
+# Headers for security
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+    # Cache headers
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache busting for HTML files
+[[headers]]
+  for = "*.html"
+
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Service Worker
+[[headers]]
+  for = "/sw.js"
+
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Content Security Policy
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+
+# Redirects for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API redirects (if needed in future)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Error pages
+[[redirects]]
+  from = "/404"
+  to = "/index.html"
+  status = 404

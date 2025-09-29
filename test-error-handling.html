@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling Test Suite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1f2937;
+            color: white;
+        }
+        .test-section {
+            background-color: #374151;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #4b5563;
+            border-radius: 4px;
+        }
+        .test-button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background-color: #2563eb;
+        }
+        .error-log {
+            background-color: #991b1b;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success-log {
+            background-color: #065f46;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .warning-log {
+            background-color: #92400e;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚨 Error Handling Test Suite</h1>
+    <p>This page tests all error handling scenarios in the NaaS Calculator application.</p>
+
+    <div id="testResults"></div>
+
+    <!-- JavaScript Error Handling Tests -->
+    <div class="test-section">
+        <h2>1. JavaScript Error Handling</h2>
+        <div class="test-item">
+            <h3>Unhandled Exceptions</h3>
+            <button class="test-button" onclick="testUnhandledException()">Test Unhandled Exception</button>
+            <button class="test-button" onclick="testTypeError()">Test TypeError</button>
+            <button class="test-button" onclick="testReferenceError()">Test ReferenceError</button>
+        </div>
+
+        <div class="test-item">
+            <h3>Promise Rejections</h3>
+            <button class="test-button" onclick="testUnhandledPromiseRejection()">Test Unhandled Promise Rejection</button>
+            <button class="test-button" onclick="testAsyncError()">Test Async Function Error</button>
+            <button class="test-button" onclick="testFetchError()">Test Fetch Error</button>
+        </div>
+    </div>
+
+    <!-- Notification System Tests -->
+    <div class="test-section">
+        <h2>2. Notification System</h2>
+        <div class="test-item">
+            <h3>Notification Types</h3>
+            <button class="test-button" onclick="testSuccessNotification()">Test Success Notification</button>
+            <button class="test-button" onclick="testErrorNotification()">Test Error Notification</button>
+            <button class="test-button" onclick="testWarningNotification()">Test Warning Notification</button>
+            <button class="test-button" onclick="testInfoNotification()">Test Info Notification</button>
+        </div>
+
+        <div class="test-item">
+            <h3>Notification Behavior</h3>
+            <button class="test-button" onclick="testNotificationDismissal()">Test Auto-Dismissal</button>
+            <button class="test-button" onclick="testMultipleNotifications()">Test Multiple Notifications</button>
+        </div>
+    </div>
+
+    <!-- Form Validation Tests -->
+    <div class="test-section">
+        <h2>3. Form Validation</h2>
+        <div class="test-item">
+            <h3>Input Validation</h3>
+            <button class="test-button" onclick="testInvalidNumberInput()">Test Invalid Number Input</button>
+            <button class="test-button" onclick="testRequiredFieldValidation()">Test Required Field</button>
+            <button class="test-button" onclick="testRangeValidation()">Test Range Validation</button>
+        </div>
+    </div>
+
+    <!-- Network Error Tests -->
+    <div class="test-section">
+        <h2>4. Network Error Handling</h2>
+        <div class="test-item">
+            <h3>Network Scenarios</h3>
+            <button class="test-button" onclick="testNetworkTimeout()">Test Network Timeout</button>
+            <button class="test-button" onclick="testOfflineScenario()">Test Offline Scenario</button>
+            <button class="test-button" onclick="testCorsError()">Test CORS Error</button>
+        </div>
+    </div>
+
+    <!-- Data Corruption Tests -->
+    <div class="test-section">
+        <h2>5. Data Corruption Handling</h2>
+        <div class="test-item">
+            <h3>Invalid Data</h3>
+            <button class="test-button" onclick="testInvalidJSON()">Test Invalid JSON</button>
+            <button class="test-button" onclick="testCorruptedLocalStorage()">Test Corrupted localStorage</button>
+            <button class="test-button" onclick="testSchemaMismatch()">Test Schema Mismatch</button>
+        </div>
+    </div>
+
+    <!-- Component Interaction Tests -->
+    <div class="test-section">
+        <h2>6. Component Interaction Tests</h2>
+        <div class="test-item">
+            <h3>Component Loading</h3>
+            <button class="test-button" onclick="testComponentLoadError()">Test Component Load Error</button>
+            <button class="test-button" onclick="testComponentInitializationError()">Test Component Init Error</button>
+            <button class="test-button" onclick="testComponentClickError()">Test Component Click Error</button>
+        </div>
+    </div>
+
+    <!-- Race Condition Tests -->
+    <div class="test-section">
+        <h2>7. Race Condition Tests</h2>
+        <div class="test-item">
+            <h3>Timing Issues</h3>
+            <button class="test-button" onclick="testInitializationRace()">Test Initialization Race</button>
+            <button class="test-button" onclick="testConcurrentCalculations()">Test Concurrent Calculations</button>
+        </div>
+    </div>
+
+    <!-- Memory Leak Tests -->
+    <div class="test-section">
+        <h2>8. Memory Leak Tests</h2>
+        <div class="test-item">
+            <h3>Resource Management</h3>
+            <button class="test-button" onclick="testEventListenerCleanup()">Test Event Listener Cleanup</button>
+            <button class="test-button" onclick="testLargeDataProcessing()">Test Large Data Processing</button>
+        </div>
+    </div>
+
+    <div id="testOutput" style="margin-top: 20px;"></div>
+
+    <script>
+        // Test Results Tracker
+        let testResults = [];
+
+        // Logger function
+        function log(message, type = 'info') {
+            const output = document.getElementById('testOutput');
+            const div = document.createElement('div');
+            div.className = type + '-log';
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+
+            testResults.push({
+                timestamp: new Date(),
+                message,
+                type
+            });
+        }
+
+        // Global error handlers
+        window.addEventListener('error', (event) => {
+            log(`❌ Unhandled Error: ${event.error?.message || event.message}`, 'error');
+            return false; // Don't prevent default handling
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log(`❌ Unhandled Promise Rejection: ${event.reason?.message || event.reason}`, 'error');
+        });
+
+        // 1. JavaScript Error Tests
+        function testUnhandledException() {
+            log('🧪 Testing unhandled exception...', 'info');
+            setTimeout(() => {
+                throw new Error('Test unhandled exception');
+            }, 100);
+        }
+
+        function testTypeError() {
+            log('🧪 Testing TypeError...', 'info');
+            setTimeout(() => {
+                null.nonExistentProperty.method();
+            }, 100);
+        }
+
+        function testReferenceError() {
+            log('🧪 Testing ReferenceError...', 'info');
+            setTimeout(() => {
+                nonExistentVariable.someMethod();
+            }, 100);
+        }
+
+        function testUnhandledPromiseRejection() {
+            log('🧪 Testing unhandled promise rejection...', 'info');
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Test promise rejection'));
+                }, 100);
+            });
+        }
+
+        async function testAsyncError() {
+            log('🧪 Testing async function error...', 'info');
+            async function failingAsyncFunction() {
+                throw new Error('Test async error');
+            }
+
+            try {
+                await failingAsyncFunction();
+            } catch (error) {
+                log('✅ Async error caught properly', 'success');
+            }
+        }
+
+        async function testFetchError() {
+            log('🧪 Testing fetch error...', 'info');
+            try {
+                const response = await fetch('https://nonexistent-domain-12345.com/api');
+                log('❌ Fetch should have failed', 'error');
+            } catch (error) {
+                log('✅ Fetch error caught properly', 'success');
+            }
+        }
+
+        // 2. Notification System Tests
+        function testSuccessNotification() {
+            log('🧪 Testing success notification...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('Test success message', 'success');
+                log('✅ Success notification shown', 'success');
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        function testErrorNotification() {
+            log('🧪 Testing error notification...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('Test error message', 'error');
+                log('✅ Error notification shown', 'success');
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        function testWarningNotification() {
+            log('🧪 Testing warning notification...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('Test warning message', 'warning');
+                log('✅ Warning notification shown', 'success');
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        function testInfoNotification() {
+            log('🧪 Testing info notification...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('Test info message', 'info');
+                log('✅ Info notification shown', 'success');
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        function testNotificationDismissal() {
+            log('🧪 Testing notification auto-dismissal...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('This message will auto-dismiss in 5 seconds', 'info');
+                setTimeout(() => {
+                    const notifications = document.querySelectorAll('.error-notification');
+                    if (notifications.length === 0) {
+                        log('✅ Notification auto-dismissed', 'success');
+                    } else {
+                        log('❌ Notification did not auto-dismiss', 'error');
+                    }
+                }, 6000);
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        function testMultipleNotifications() {
+            log('🧪 Testing multiple notifications...', 'info');
+            if (window.ErrorHandler && window.ErrorHandler.showNotification) {
+                ErrorHandler.showNotification('First notification', 'info');
+                ErrorHandler.showNotification('Second notification', 'warning');
+                ErrorHandler.showNotification('Third notification', 'error');
+                log('✅ Multiple notifications shown', 'success');
+            } else {
+                log('❌ ErrorHandler.showNotification not available', 'error');
+            }
+        }
+
+        // 3. Form Validation Tests
+        function testInvalidNumberInput() {
+            log('🧪 Testing invalid number input...', 'info');
+            // Simulate invalid number input
+            const testInput = document.createElement('input');
+            testInput.type = 'number';
+            testInput.value = 'invalid number';
+
+            if (testInput.validity.valid === false) {
+                log('✅ Invalid number properly detected', 'success');
+            } else {
+                log('❌ Invalid number not detected', 'error');
+            }
+        }
+
+        function testRequiredFieldValidation() {
+            log('🧪 Testing required field validation...', 'info');
+            const testInput = document.createElement('input');
+            testInput.required = true;
+            testInput.value = '';
+
+            if (testInput.validity.valid === false) {
+                log('✅ Required field validation working', 'success');
+            } else {
+                log('❌ Required field validation not working', 'error');
+            }
+        }
+
+        function testRangeValidation() {
+            log('🧪 Testing range validation...', 'info');
+            const testInput = document.createElement('input');
+            testInput.type = 'number';
+            testInput.min = '0';
+            testInput.max = '100';
+            testInput.value = '150';
+
+            if (testInput.validity.valid === false) {
+                log('✅ Range validation working', 'success');
+            } else {
+                log('❌ Range validation not working', 'error');
+            }
+        }
+
+        // 4. Network Error Tests
+        function testNetworkTimeout() {
+            log('🧪 Testing network timeout...', 'info');
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), 1000);
+
+            fetch('https://httpbin.org/delay/5', {
+                signal: controller.signal
+            }).then(() => {
+                log('❌ Request should have timed out', 'error');
+            }).catch(error => {
+                if (error.name === 'AbortError') {
+                    log('✅ Network timeout handled properly', 'success');
+                } else {
+                    log('❌ Unexpected error: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function testOfflineScenario() {
+            log('🧪 Testing offline scenario...', 'info');
+            if (navigator.onLine === false) {
+                log('✅ Currently offline - testing offline handling', 'success');
+            } else {
+                log('⚠️ Currently online - cannot test offline scenario', 'warning');
+            }
+
+            // Simulate offline behavior
+            window.dispatchEvent(new Event('offline'));
+            log('🔄 Simulated offline event', 'info');
+        }
+
+        function testCorsError() {
+            log('🧪 Testing CORS error...', 'info');
+            fetch('https://google.com/api/test')
+                .then(() => {
+                    log('❌ CORS request should have failed', 'error');
+                })
+                .catch(error => {
+                    log('✅ CORS error handled: ' + error.message, 'success');
+                });
+        }
+
+        // 5. Data Corruption Tests
+        function testInvalidJSON() {
+            log('🧪 Testing invalid JSON parsing...', 'info');
+            try {
+                JSON.parse('{ invalid json }');
+                log('❌ Invalid JSON should have thrown error', 'error');
+            } catch (error) {
+                log('✅ Invalid JSON error caught: ' + error.message, 'success');
+            }
+        }
+
+        function testCorruptedLocalStorage() {
+            log('🧪 Testing corrupted localStorage...', 'info');
+            try {
+                localStorage.setItem('test_data', '{ corrupted data }');
+                const data = JSON.parse(localStorage.getItem('test_data'));
+                log('❌ Corrupted data should have thrown error', 'error');
+            } catch (error) {
+                log('✅ Corrupted localStorage handled: ' + error.message, 'success');
+                localStorage.removeItem('test_data');
+            }
+        }
+
+        function testSchemaMismatch() {
+            log('🧪 Testing schema mismatch...', 'info');
+            const validSchema = { name: 'string', age: 'number' };
+            const invalidData = { name: 123, age: 'not a number' };
+
+            // Simple schema validation
+            let isValid = true;
+            if (typeof invalidData.name !== 'string') isValid = false;
+            if (typeof invalidData.age !== 'number') isValid = false;
+
+            if (!isValid) {
+                log('✅ Schema mismatch detected', 'success');
+            } else {
+                log('❌ Schema mismatch not detected', 'error');
+            }
+        }
+
+        // 6. Component Interaction Tests
+        function testComponentLoadError() {
+            log('🧪 Testing component load error...', 'info');
+            try {
+                // Simulate component loading
+                if (typeof window.ComponentManager === 'undefined') {
+                    throw new Error('ComponentManager not loaded');
+                }
+                log('✅ ComponentManager loaded properly', 'success');
+            } catch (error) {
+                log('❌ Component load error: ' + error.message, 'error');
+            }
+        }
+
+        function testComponentInitializationError() {
+            log('🧪 Testing component initialization error...', 'info');
+            try {
+                // Try to initialize with invalid parameters
+                if (window.ComponentManager) {
+                    new ComponentManager(null); // Should handle null calculator
+                    log('⚠️ Component handled null parameter', 'warning');
+                } else {
+                    log('❌ ComponentManager not available', 'error');
+                }
+            } catch (error) {
+                log('❌ Component initialization error: ' + error.message, 'error');
+            }
+        }
+
+        function testComponentClickError() {
+            log('🧪 Testing component click error (red notification bug)...', 'info');
+
+            // Create a test component button
+            const testButton = document.createElement('button');
+            testButton.textContent = 'Test Component';
+            testButton.onclick = function() {
+                try {
+                    // This should trigger the red notification error
+                    if (window.app && window.app.navigateToComponent) {
+                        window.app.navigateToComponent('nonexistent_component');
+                    } else {
+                        throw new Error('App navigation not available');
+                    }
+                } catch (error) {
+                    log('❌ Component click error: ' + error.message, 'error');
+                }
+            };
+
+            document.body.appendChild(testButton);
+            testButton.click();
+            document.body.removeChild(testButton);
+
+            log('🔄 Tested component click scenario', 'info');
+        }
+
+        // 7. Race Condition Tests
+        function testInitializationRace() {
+            log('🧪 Testing initialization race condition...', 'info');
+
+            // Simulate rapid initialization attempts
+            const promises = [];
+            for (let i = 0; i < 5; i++) {
+                promises.push(new Promise((resolve) => {
+                    setTimeout(() => {
+                        log(`🏃 Init attempt ${i + 1}`, 'info');
+                        resolve(i);
+                    }, Math.random() * 100);
+                }));
+            }
+
+            Promise.all(promises).then(() => {
+                log('✅ Race condition test completed', 'success');
+            });
+        }
+
+        function testConcurrentCalculations() {
+            log('🧪 Testing concurrent calculations...', 'info');
+
+            // Simulate multiple calculations running simultaneously
+            const calculations = [];
+            for (let i = 0; i < 3; i++) {
+                calculations.push(new Promise((resolve) => {
+                    setTimeout(() => {
+                        log(`🧮 Calculation ${i + 1} completed`, 'info');
+                        resolve(i);
+                    }, Math.random() * 200);
+                }));
+            }
+
+            Promise.all(calculations).then(() => {
+                log('✅ Concurrent calculations test completed', 'success');
+            });
+        }
+
+        // 8. Memory Leak Tests
+        function testEventListenerCleanup() {
+            log('🧪 Testing event listener cleanup...', 'info');
+
+            const testElement = document.createElement('div');
+            const handler = () => {};
+
+            testElement.addEventListener('click', handler);
+            document.body.appendChild(testElement);
+
+            // Cleanup
+            testElement.removeEventListener('click', handler);
+            document.body.removeChild(testElement);
+
+            log('✅ Event listener cleanup test completed', 'success');
+        }
+
+        function testLargeDataProcessing() {
+            log('🧪 Testing large data processing...', 'info');
+
+            try {
+                // Create a large array
+                const largeArray = new Array(100000).fill(0).map((_, i) => ({
+                    id: i,
+                    value: Math.random(),
+                    data: 'test data ' + i
+                }));
+
+                // Process the data
+                const processed = largeArray.filter(item => item.value > 0.5);
+
+                log(`✅ Processed ${processed.length} items from ${largeArray.length}`, 'success');
+
+                // Cleanup
+                largeArray.length = 0;
+                processed.length = 0;
+
+            } catch (error) {
+                log('❌ Large data processing error: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize test page
+        log('🚀 Error Handling Test Suite initialized', 'success');
+        log('📝 Click test buttons to run individual tests', 'info');
+
+        // Test for existing error handler
+        setTimeout(() => {
+            if (window.ErrorHandler) {
+                log('✅ ErrorHandler is available globally', 'success');
+            } else {
+                log('❌ ErrorHandler is not available globally', 'error');
+            }
+
+            if (window.app) {
+                log('✅ App is available globally', 'success');
+            } else {
+                log('❌ App is not available globally', 'error');
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>

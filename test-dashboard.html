@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaaS Calculator - Dashboard Testing</title>
+
+    <!-- External CSS with integrity checks -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+          rel="stylesheet"
+          integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw=="
+          crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          rel="stylesheet"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        .test-overlay {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            max-width: 400px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-status {
+            margin-bottom: 10px;
+        }
+        .test-results {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="font-inter">
+    <!-- Test Status Overlay -->
+    <div id="testOverlay" class="test-overlay">
+        <div class="test-status">
+            <strong>🔬 Dashboard Testing in Progress...</strong>
+        </div>
+        <div class="test-results" id="testResults">
+            Initializing tests...
+        </div>
+        <button onclick="toggleTestOverlay()" style="margin-top: 10px; padding: 5px 10px; background: #333; color: white; border: none; border-radius: 4px;">Toggle Overlay</button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 flex items-center space-x-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            <span class="text-gray-700 font-medium">Loading NaaS Calculator for Testing...</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav>
+        <div class="w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Burger menu button -->
+                    <button id="mobileMenuBtn"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            aria-label="Open mobile menu"
+                            aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <div class="flex-shrink-0 ml-2 md:ml-0">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-200 flex items-center">
+                            <span class="material-icons text-[var(--qolcom-green)] mr-2" style="font-size: 28px;">calculate</span>
+                            <span class="hidden sm:inline">NaaS Calculator - TEST MODE</span>
+                            <span class="sm:hidden">NaaS TEST</span>
+                        </h1>
+                    </div>
+
+                    <!-- Desktop navigation -->
+                    <div id="desktopNav" class="hidden ml-6 space-x-6 lg:space-x-8">
+                        <button id="dashboardBtn"
+                                class="nav-btn active border-[var(--qolcom-green)] text-[var(--qolcom-green)] inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-[var(--qolcom-green)] bg-opacity-20"
+                                data-view="dashboard"
+                                aria-label="Dashboard">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]">dashboard</span>Dashboard
+                        </button>
+                        <button id="componentsBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="components"
+                                aria-label="Components">
+                            <span class="material-icons mr-2">widgets</span>Components
+                        </button>
+                        <button id="wizardBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="wizard"
+                                aria-label="Full Quote">
+                            <span class="material-icons mr-2">receipt_long</span>Full Quote
+                        </button>
+                        <button id="historyBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="history"
+                                aria-label="History">
+                            <span class="material-icons mr-2">history</span>History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <button id="importBtn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 md:px-4 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            aria-label="Import data">
+                        <span class="material-icons mr-1 md:mr-2">file_upload</span>
+                        <span class="hidden sm:inline">Import</span>
+                    </button>
+                    <button id="exportBtn"
+                            class="bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white px-3 py-2 md:px-4 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            aria-label="Export data">
+                        <span class="material-icons mr-1 md:mr-2">file_download</span>
+                        <span class="hidden sm:inline">Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div id="mobileMenu" class="hidden" aria-hidden="true">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-[#2b3544] border-t border-gray-700">
+                    <button id="mobileDashboardBtn"
+                            class="mobile-nav-btn active text-[var(--qolcom-green)] block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="dashboard">
+                        <span class="material-icons mr-2">dashboard</span>Dashboard
+                    </button>
+                    <button id="mobileComponentsBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="components">
+                        <span class="material-icons mr-2">widgets</span>Components
+                    </button>
+                    <button id="mobileWizardBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="wizard">
+                        <span class="material-icons mr-2">receipt_long</span>Full Quote
+                    </button>
+                    <button id="mobileHistoryBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="history">
+                        <span class="material-icons mr-2">history</span>History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="w-full py-6 px-4 sm:px-6 lg:px-8" role="main">
+
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view-content" role="tabpanel" aria-labelledby="dashboardBtn">
+            <div class="bg-[#1f2937] text-white p-8 rounded-2xl mb-8 shadow-lg border border-gray-700">
+                <h2 class="text-3xl font-bold mb-2">Welcome to NaaS Pricing Calculator - TEST MODE</h2>
+                <p class="text-lg opacity-80">Testing all dashboard interactions and functionality</p>
+            </div>
+
+            <!-- Quick Access Cards -->
+            <div id="dashboardComponents" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                <!-- Components will be populated by JavaScript -->
+            </div>
+
+            <!-- Full Quote Builder -->
+            <div class="bg-[#1f2937] rounded-2xl my-8 p-8 text-center shadow-lg border border-gray-700">
+                <h3 class="text-2xl font-bold text-gray-200 mb-2">Complete NaaS Solution</h3>
+                <p class="text-gray-400 mb-6">Build a comprehensive quote with all components and get volume discounts</p>
+                <button id="startFullQuoteBtn"
+                        class="bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center mx-auto"
+                        aria-label="Start full quote builder">
+                    <span class="material-icons align-middle mr-2">start</span>Start Full Quote Builder
+                </button>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-[#1f2937] rounded-2xl p-6 shadow-lg border border-gray-700">
+                <h3 class="text-xl font-bold text-gray-200 mb-4">Recent Quotes</h3>
+                <div id="recentQuotes" class="space-y-3">
+                    <!-- Recent quotes will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Components View -->
+        <div id="componentsView" class="view-content hidden" role="tabpanel" aria-labelledby="componentsBtn">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Component Pricing</h2>
+                <p class="text-gray-400">Price individual components or combine multiple services</p>
+            </div>
+
+            <!-- Component Selection Layout -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Component List Sidebar -->
+                <div class="lg:w-80 flex-shrink-0">
+                    <div class="bg-[#1f2937] rounded-xl shadow-md p-4 sticky top-6 border border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]">list</span>Components
+                        </h3>
+                        <div class="space-y-1 max-h-96 overflow-y-auto" id="componentList">
+                            <!-- Component items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component Configuration Main Area -->
+                <div class="flex-1">
+                    <div id="componentConfigArea" class="bg-[#1f2937] rounded-xl shadow-md p-6 min-h-96 border border-gray-700">
+                        <div class="text-center py-12">
+                            <span class="material-icons text-4xl text-gray-400 mb-4">widgets</span>
+                            <p class="text-gray-400 mb-6">Select a component from the sidebar to configure and price</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Summary Sidebar -->
+                <div class="lg:w-80 flex-shrink-0">
+                    <div class="bg-[#1f2937] rounded-xl shadow-md p-4 sticky top-6 border border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]">calculate</span>Quote Summary
+                        </h3>
+                        <div id="pricingSummary" class="space-y-3">
+                            <div class="text-center py-4">
+                                <p class="text-gray-400">Configure components to see pricing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wizard View -->
+        <div id="wizardView" class="view-content hidden" role="tabpanel" aria-labelledby="wizardBtn">
+            <div class="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-200 mb-2">Full Quote Builder</h2>
+                    <p class="text-gray-400">Complete workflow for comprehensive NaaS solutions</p>
+                </div>
+            </div>
+
+            <!-- Wizard Content -->
+            <div id="wizardContent" class="bg-[#1f2937] rounded-xl shadow-md p-8 border border-gray-700">
+                <div class="text-center py-12">
+                    <span class="material-icons text-4xl text-gray-400 mb-4">receipt_long</span>
+                    <p class="text-gray-400">Wizard functionality for testing</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="view-content hidden" role="tabpanel" aria-labelledby="historyBtn">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Quote History</h2>
+                <p class="text-gray-400">View and manage your saved quotes</p>
+            </div>
+
+            <div class="bg-[#1f2937] rounded-xl shadow-md p-6 border border-gray-700">
+                <div id="historyContent">
+                    <div class="text-center py-12">
+                        <span class="material-icons text-4xl text-gray-400 mb-4">history</span>
+                        <p class="text-gray-400">History functionality for testing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- External Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+            integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+            integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"
+            integrity="sha512-M72KfQY7kRvfaEq8gIUlQ4E4y8YOfXWqRLvNH4gkKM8mYXqGP3wEbg0iT5qT/YYFLaaG1JDJxhTLDYN/qjYjA=="
+            crossorigin="anonymous"></script>
+
+    <!-- Application Scripts -->
+    <script src="js/storage-manager.js"></script>
+    <script src="js/data-store.js"></script>
+    <script src="js/calculations.js"></script>
+    <script src="js/dependency-graph.js"></script>
+    <script src="js/calculation-orchestrator.js"></script>
+    <script src="js/import-validator.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/wizard.js"></script>
+    <script src="js/import-export.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Dashboard Test Script -->
+    <script src="dashboard-test-script.js"></script>
+
+    <script>
+        // Test overlay control
+        function toggleTestOverlay() {
+            const overlay = document.getElementById('testOverlay');
+            overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Update test results in overlay
+        function updateTestResults(results) {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = results;
+        }
+
+        // Hide loading indicator once everything is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 500);
+        });
+    </script>
+
+</body>
+</html>

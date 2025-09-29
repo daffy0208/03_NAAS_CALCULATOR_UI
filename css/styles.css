@@ -1,0 +1,1077 @@
+/* Custom CSS for NaaS Pricing Calculator */
+
+/* Global Styles */
+:root {
+    --qolcom-green: #00a651;
+    --dark-bg: #111827;
+    --dark-card: #1f2937;
+    --dark-border: #374151;
+    --text-primary: #d1d5db;
+    --text-secondary: #9ca3af;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    background-color: var(--dark-bg);
+    min-height: 100vh;
+}
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Navigation Styles - Dark Theme */
+nav {
+    backdrop-filter: blur(10px);
+    background: var(--dark-card);
+    border-bottom: 1px solid var(--dark-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.nav-btn {
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.nav-btn:hover {
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    color: var(--qolcom-green) !important;
+    border-color: var(--qolcom-green) !important;
+}
+
+/* Mobile Navigation Styles */
+.mobile-nav-btn {
+    transition: all 0.2s ease;
+    border-radius: 0.375rem;
+}
+
+.mobile-nav-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.mobile-nav-btn.active {
+    background-color: #dbeafe;
+    color: #2563eb !important;
+}
+
+/* Mobile Menu Animation */
+#mobileMenu {
+    transition: all 0.3s ease-in-out;
+}
+
+#mobileMenu.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+#mobileMenu:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Header Full Width Optimization */
+nav .w-full {
+    max-width: none;
+}
+
+/* Desktop Navigation */
+#desktopNav {
+    display: flex;
+}
+
+/* Responsive Header Adjustments */
+@media (min-width: 1280px) {
+    nav .md\\:space-x-6 {
+        gap: 2rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    nav .md\\:space-x-6 {
+        gap: 2.5rem;
+    }
+}
+
+/* View Content */
+.view-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Component Cards - Dark Theme */
+.component-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+.component-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Compact Dashboard Layout - Dark Theme */
+#dashboardComponents .component-card {
+    padding: 1.25rem;
+    min-height: 160px;
+    border-radius: 0.75rem;
+    border-top: 4px solid;
+}
+
+#dashboardComponents .component-card h3 {
+    font-size: 1rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#dashboardComponents .component-card p {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+#dashboardComponents .component-card .text-lg {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Compact Components View - Sidebar Layout - Dark Theme */
+#componentList .component-item {
+    padding: 0.75rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background-color: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+#componentList .component-item:hover {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+#componentList .component-item.active {
+    background-color: rgba(148, 193, 32, 0.1);
+    border-color: var(--qolcom-green);
+}
+
+#componentList .component-item .component-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+#componentList .component-item .flex-1 {
+    min-width: 0;
+}
+
+#componentList .component-item .font-medium {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.125rem;
+}
+
+#componentList .component-item .text-sm {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+#componentList .component-item .text-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+#componentList .component-item .text-right .text-sm {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #059669;
+}
+
+#componentList .component-item .text-right .text-xs {
+    font-size: 0.625rem;
+    color: #9ca3af;
+}
+
+/* Compact Forms */
+.config-section {
+    margin-bottom: 1.5rem;
+}
+
+.config-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-input, .form-select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Compact Tables */
+.device-table {
+    font-size: 0.8rem;
+}
+
+.device-table th,
+.device-table td {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Compact Wizard Steps */
+.wizard-step {
+    padding: 1.5rem;
+}
+
+.step-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.step-header p {
+    font-size: 0.9rem;
+}
+
+/* Full Width Layout */
+main {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* Responsive Grid Improvements */
+@media (min-width: 1024px) {
+    #dashboardComponents {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    #dashboardComponents {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    #dashboardComponents {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 1920px) {
+    #dashboardComponents {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* Components View Full Width - Sidebar Layout */
+#componentsView .flex {
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    #componentsView .flex {
+        gap: 2rem;
+    }
+}
+
+/* Mobile responsive for components view */
+@media (max-width: 1023px) {
+    #componentsView .lg\\:w-80 {
+        width: 100%;
+    }
+
+    #componentsView .lg\\:flex-row {
+        flex-direction: column;
+    }
+
+    #componentList {
+        max-height: 200px;
+    }
+}
+
+/* Touch Target Improvements - WCAG 2.1 AA Compliance (44px minimum) */
+@media (pointer: coarse) {
+    button,
+    .component-card,
+    .component-item,
+    input,
+    select,
+    textarea,
+    .nav-btn,
+    .mobile-nav-btn,
+    .modal-close,
+    [role="button"],
+    [tabindex]:not([tabindex="-1"]) {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+    }
+
+    /* Specific touch target fixes */
+    #mobileMenuBtn {
+        min-height: 40px;
+        min-width: 40px;
+        padding: 8px;
+    }
+
+    .component-card {
+        min-height: 100px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .component-item {
+        min-height: 40px;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+    }
+
+    .form-input, .form-select {
+        min-height: 36px;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    /* Navigation buttons */
+    .nav-btn, .mobile-nav-btn {
+        min-height: 36px;
+        padding: 8px 12px;
+        margin: 2px 0;
+    }
+
+    /* Modal close button */
+    .modal-close {
+        min-height: 32px;
+        min-width: 32px;
+        padding: 8px;
+    }
+
+    /* Step indicators */
+    .step-indicator {
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 14px;
+    }
+}
+
+/* Focus Improvements for Better Accessibility */
+button:focus,
+.component-card:focus,
+.component-item:focus,
+input:focus,
+select:focus,
+textarea:focus,
+.nav-btn:focus,
+.mobile-nav-btn:focus,
+[tabindex]:focus,
+[role="button"]:focus {
+    outline: 3px solid var(--qolcom-green);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.3);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --dark-bg: #000000;
+        --dark-card: #1a1a1a;
+        --dark-border: #ffffff;
+        --text-primary: #ffffff;
+        --text-secondary: #e5e5e5;
+        --qolcom-green: #00ff00;
+    }
+
+    /* Enhanced contrast for all interactive elements */
+    button, .component-card, .component-item,
+    input, select, textarea {
+        border: 2px solid #ffffff !important;
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+
+    .nav-btn.active, .mobile-nav-btn.active {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+    }
+
+    /* Ensure text has sufficient contrast */
+    h1, h2, h3, h4, h5, h6, p, span, div {
+        color: #ffffff !important;
+    }
+
+    /* Make focus indicators more prominent */
+    *:focus {
+        outline: 4px solid #00ff00 !important;
+        outline-offset: 2px !important;
+        box-shadow: 0 0 0 6px rgba(0, 255, 0, 0.5) !important;
+    }
+
+    /* Enhanced button states */
+    button:hover, .component-card:hover, .component-item:hover {
+        background-color: #333333 !important;
+        border-color: #00ff00 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .component-card:hover {
+        transform: none !important;
+    }
+
+    .fade-in,
+    .slide-up,
+    .pulse,
+    .loading::after {
+        animation: none !important;
+    }
+}
+
+/* Color blindness support - ensuring sufficient contrast ratios */
+.text-red-400, .text-red-500, .text-red-600 {
+    color: #dc2626 !important; /* WCAG AA compliant red */
+}
+
+.text-green-400, .text-green-500, .text-green-600 {
+    color: #16a34a !important; /* WCAG AA compliant green */
+}
+
+.text-blue-400, .text-blue-500, .text-blue-600 {
+    color: #2563eb !important; /* WCAG AA compliant blue */
+}
+
+.text-yellow-400, .text-yellow-500, .text-yellow-600 {
+    color: #ca8a04 !important; /* WCAG AA compliant yellow */
+}
+
+/* Dark mode color adjustments for better accessibility */
+@media (prefers-color-scheme: dark) {
+    .text-red-400, .text-red-500, .text-red-600 {
+        color: #f87171 !important;
+    }
+
+    .text-green-400, .text-green-500, .text-green-600 {
+        color: #4ade80 !important;
+    }
+
+    .text-blue-400, .text-blue-500, .text-blue-600 {
+        color: #60a5fa !important;
+    }
+
+    .text-yellow-400, .text-yellow-500, .text-yellow-600 {
+        color: #facc15 !important;
+    }
+}
+
+/* Text scaling support - ensuring layouts work at 200-400% zoom */
+@media screen and (min-width: 1px) {
+    html {
+        font-size: 16px; /* Standard 16px base font size */
+    }
+
+    /* Flexible container widths for text scaling */
+    .container, main, nav {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* Ensure touch targets remain accessible at scale */
+    button, .component-card, .component-item,
+    input, select, textarea {
+        min-height: 36px;
+        min-width: 36px;
+        padding: 6px 12px;
+    }
+
+    /* Responsive grid adjustments for text scaling */
+    @supports (display: grid) {
+        #dashboardComponents {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        /* At very high zoom levels, switch to single column */
+        @media (max-width: 480px) {
+            #dashboardComponents {
+                grid-template-columns: 1fr;
+            }
+        }
+    }
+
+    /* Ensure content doesn't overflow horizontally */
+    * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Override fixed widths that could cause issues */
+    .w-80, .lg\\:w-80 {
+        width: 100% !important;
+        max-width: 320px;
+    }
+
+    /* Improve modal scaling */
+    .modal-content {
+        width: 95% !important;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Wizard View Full Width */
+#wizardContent {
+    max-width: none;
+    width: 100%;
+}
+
+/* Full Quote Builder Content */
+#wizardView .bg-white {
+    max-width: none;
+}
+
+/* Compact Pricing Sidebar */
+#pricingSidebar {
+    width: 320px;
+}
+
+.pricing-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.pricing-item h4 {
+    font-size: 0.9rem;
+}
+
+.pricing-item .price {
+    font-size: 1rem;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.component-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.component-card.selected {
+    ring: 2px;
+    ring-color: #3b82f6;
+    border-color: #3b82f6;
+    background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* Step Indicator */
+.step-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #374151;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.step-indicator.active {
+    background-color: var(--qolcom-green);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(0, 166, 81, 0.2);
+}
+
+.step-indicator.completed {
+    background-color: #10b981;
+    color: white;
+}
+
+.step-indicator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 60px;
+    height: 2px;
+    background-color: #e5e7eb;
+    transform: translateY(-50%);
+    z-index: -1;
+}
+
+.step-indicator:last-child::after {
+    display: none;
+}
+
+.step-indicator.completed::after {
+    background-color: #10b981;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:invalid {
+    border-color: #ef4444;
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* Pricing Cards */
+.pricing-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.pricing-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #059669;
+    line-height: 1;
+}
+
+.pricing-period {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Component List Items */
+.component-item {
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: between;
+}
+
+.component-item:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.component-item.active {
+    background-color: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.component-item .component-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 14px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--dark-card);
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 500px;
+    width: 90%;
+    border: 1px solid var(--dark-border);
+    max-height: 90vh;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 24px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: between;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* Sidebar Styles */
+#pricingSidebar {
+    box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+#pricingSidebar.show {
+    transform: translateX(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .component-card {
+        margin-bottom: 16px;
+    }
+    
+    .step-indicator {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .step-indicator::after {
+        width: 40px;
+    }
+    
+    .pricing-amount {
+        font-size: 1.5rem;
+    }
+    
+    #pricingSidebar {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 16px;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glass-morphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 8px);
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.6),
+        transparent
+    );
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Component Configuration Styles */
+.config-section {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.config-section h3 {
+    color: #1f2937;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.config-section h3 i {
+    margin-right: 8px;
+    color: #3b82f6;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+/* Calculation Results */
+.calc-result {
+    background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+.calc-result h4 {
+    color: #065f46;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.result-item:last-child {
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 18px;
+    color: #065f46;
+}
+
+/* Error States */
+.error {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Success States */
+.success {
+    border-color: #10b981 !important;
+    background-color: #ecfdf5;
+}
+
+.success-message {
+    color: #059669;
+    font-size: 12px;
+    margin-top: 4px;
+}

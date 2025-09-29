@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel File Examiner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>Excel File Structure Analysis</h1>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    let output = '<h2>Workbook Analysis</h2>';
+                    output += '<h3>Sheet Names:</h3><ul>';
+                    workbook.SheetNames.forEach(name => {
+                        output += `<li>${name}</li>`;
+                    });
+                    output += '</ul>';
+
+                    // Analyze each sheet
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        
+                        output += `<h3>Sheet: ${sheetName}</h3>`;
+                        output += `<p>Rows: ${jsonData.length}</p>`;
+                        
+                        if (jsonData.length > 0) {
+                            output += '<h4>First 10 rows:</h4>';
+                            output += '<table border="1" style="border-collapse: collapse;">';
+                            
+                            // Show first 10 rows
+                            for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+                                output += '<tr>';
+                                const row = jsonData[i];
+                                for (let j = 0; j < Math.min(10, row.length); j++) {
+                                    output += `<td style="padding: 5px; border: 1px solid #ccc;">${row[j] || ''}</td>`;
+                                }
+                                output += '</tr>';
+                            }
+                            output += '</table>';
+                        }
+                        
+                        // Look for key patterns
+                        const allText = jsonData.flat().join(' ').toLowerCase();
+                        const keyTerms = ['prtg', 'capital', 'support', 'onboarding', 'pbs', 'pricing', 'cost', 'monthly', 'annual'];
+                        const foundTerms = keyTerms.filter(term => allText.includes(term));
+                        
+                        if (foundTerms.length > 0) {
+                            output += `<p><strong>Key terms found:</strong> ${foundTerms.join(', ')}</p>`;
+                        }
+                    });
+                    
+                    document.getElementById('output').innerHTML = output;
+                } catch (error) {
+                    document.getElementById('output').innerHTML = `<p>Error: ${error.message}</p>`;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>

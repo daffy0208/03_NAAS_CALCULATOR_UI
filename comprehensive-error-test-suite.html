@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaaS Calculator - Comprehensive Error Test Suite</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            border-left: 4px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .test-section.running {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .test-section.passed {
+            border-left-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        .test-section.failed {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .test-result {
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .error-log {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .network-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Network Status Indicator -->
+    <div id="networkStatus" class="network-status">
+        <div class="bg-green-500 text-white px-3 py-1 rounded-full text-sm flex items-center">
+            <i class="fas fa-wifi mr-2"></i>
+            <span id="networkStatusText">Online</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <i class="fas fa-bug mr-2 text-red-500"></i>
+                    NaaS Calculator - Error Test Suite
+                </h1>
+                <div class="flex space-x-3">
+                    <button id="runAllTests" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-play mr-2"></i>Run All Tests
+                    </button>
+                    <button id="clearResults" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Clear Results
+                    </button>
+                    <button id="exportResults" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Test Results Summary -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div id="testSummary" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-list text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-600">Total Tests</p>
+                        <p id="totalTests" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-600">Passed</p>
+                        <p id="passedTests" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-red-100 rounded-lg">
+                        <i class="fas fa-times text-red-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-600">Failed</p>
+                        <p id="failedTests" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-600">Running</p>
+                        <p id="runningTests" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Categories -->
+        <div class="space-y-6">
+
+            <!-- 1. Network Failures -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="networkFailures">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-wifi mr-2 text-blue-500"></i>
+                        1. Network Failures
+                    </h2>
+                    <button class="run-category-btn bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600" data-category="networkFailures">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing offline mode, slow connections, timeouts, and intermittent connectivity</p>
+                <div id="networkFailuresResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 2. Data Corruption -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="dataCorruption">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-database mr-2 text-red-500"></i>
+                        2. Data Corruption
+                    </h2>
+                    <button class="run-category-btn bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600" data-category="dataCorruption">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing invalid data formats, missing fields, type mismatches</p>
+                <div id="dataCorruptionResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 3. Browser Limitations -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="browserLimitations">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-browser mr-2 text-purple-500"></i>
+                        3. Browser Limitations
+                    </h2>
+                    <button class="run-category-btn bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600" data-category="browserLimitations">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing storage quota exceeded, JavaScript disabled, old browser versions</p>
+                <div id="browserLimitationsResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 4. User Input Errors -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="userInputErrors">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibontent text-gray-900 flex items-center">
+                        <i class="fas fa-user-edit mr-2 text-green-500"></i>
+                        4. User Input Errors
+                    </h2>
+                    <button class="run-category-btn bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" data-category="userInputErrors">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing invalid inputs, boundary conditions, injection attempts</p>
+                <div id="userInputErrorsResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 5. System Errors -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="systemErrors">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                        5. System Errors
+                    </h2>
+                    <button class="run-category-btn bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600" data-category="systemErrors">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing JavaScript errors, unhandled exceptions, promise rejections</p>
+                <div id="systemErrorsResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 6. Race Conditions -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="raceConditions">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-running mr-2 text-indigo-500"></i>
+                        6. Race Conditions
+                    </h2>
+                    <button class="run-category-btn bg-indigo-500 text-white px-3 py-1 rounded text-sm hover:bg-indigo-600" data-category="raceConditions">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing concurrent operations, initialization timing, async conflicts</p>
+                <div id="raceConditionsResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 7. Resource Constraints -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="resourceConstraints">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-memory mr-2 text-orange-500"></i>
+                        7. Resource Constraints
+                    </h2>
+                    <button class="run-category-btn bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600" data-category="resourceConstraints">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing memory limits, CPU intensive operations, storage full</p>
+                <div id="resourceConstraintsResults" class="space-y-2"></div>
+            </div>
+
+            <!-- 8. Integration Failures -->
+            <div class="test-section bg-white rounded-lg shadow p-6" id="integrationFailures">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-plug mr-2 text-teal-500"></i>
+                        8. Integration Failures
+                    </h2>
+                    <button class="run-category-btn bg-teal-500 text-white px-3 py-1 rounded text-sm hover:bg-teal-600" data-category="integrationFailures">
+                        Run Category
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Testing file import/export errors, calculation errors</p>
+                <div id="integrationFailuresResults" class="space-y-2"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Error Log Modal -->
+    <div id="errorLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-96 overflow-hidden">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg font-semibold">Error Details</h3>
+                    <button id="closeErrorModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="errorLogContent" class="p-4 error-log overflow-y-auto" style="max-height: 300px;">
+                    <!-- Error details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include necessary scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/storage-manager.js"></script>
+    <script src="js/data-store.js"></script>
+    <script src="js/calculations.js"></script>
+
+    <script>
+        // Global test state
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            running: 0,
+            categories: {}
+        };
+
+        let errorLog = [];
+        let originalConsoleError = console.error;
+        let originalWindowError = window.onerror;
+        let originalUnhandledRejection = window.onunhandledrejection;
+
+        // Enhanced error tracking
+        console.error = function(...args) {
+            errorLog.push({
+                type: 'console.error',
+                timestamp: new Date().toISOString(),
+                message: args.join(' '),
+                stack: new Error().stack
+            });
+            return originalConsoleError.apply(console, args);
+        };
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            errorLog.push({
+                type: 'window.error',
+                timestamp: new Date().toISOString(),
+                message: message,
+                source: source,
+                line: lineno,
+                column: colno,
+                stack: error?.stack
+            });
+            if (originalWindowError) {
+                return originalWindowError.apply(window, arguments);
+            }
+        };
+
+        window.onunhandledrejection = function(event) {
+            errorLog.push({
+                type: 'unhandled.rejection',
+                timestamp: new Date().toISOString(),
+                reason: event.reason,
+                promise: event.promise
+            });
+            if (originalUnhandledRejection) {
+                return originalUnhandledRejection.apply(window, arguments);
+            }
+        };
+
+        // Network status monitoring
+        function updateNetworkStatus() {
+            const status = navigator.onLine;
+            const statusElement = document.getElementById('networkStatus');
+            const textElement = document.getElementById('networkStatusText');
+
+            if (status) {
+                statusElement.className = 'network-status';
+                statusElement.firstElementChild.className = 'bg-green-500 text-white px-3 py-1 rounded-full text-sm flex items-center';
+                textElement.textContent = 'Online';
+            } else {
+                statusElement.className = 'network-status';
+                statusElement.firstElementChild.className = 'bg-red-500 text-white px-3 py-1 rounded-full text-sm flex items-center';
+                textElement.textContent = 'Offline';
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        // Test framework utilities
+        class ErrorTestFramework {
+            constructor() {
+                this.tests = {};
+                this.results = {};
+            }
+
+            addTest(category, name, testFunction, description = '') {
+                if (!this.tests[category]) {
+                    this.tests[category] = [];
+                    this.results[category] = [];
+                }
+
+                this.tests[category].push({
+                    name,
+                    testFunction,
+                    description
+                });
+            }
+
+            async runTest(category, testIndex) {
+                const test = this.tests[category][testIndex];
+                const startTime = performance.now();
+
+                try {
+                    testResults.running++;
+                    this.updateSummary();
+
+                    const result = await test.testFunction();
+                    const endTime = performance.now();
+
+                    this.results[category][testIndex] = {
+                        name: test.name,
+                        description: test.description,
+                        status: 'passed',
+                        duration: Math.round(endTime - startTime),
+                        result: result,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    testResults.running--;
+                    testResults.passed++;
+
+                } catch (error) {
+                    const endTime = performance.now();
+
+                    this.results[category][testIndex] = {
+                        name: test.name,
+                        description: test.description,
+                        status: 'failed',
+                        duration: Math.round(endTime - startTime),
+                        error: {
+                            message: error.message,
+                            stack: error.stack,
+                            name: error.name
+                        },
+                        timestamp: new Date().toISOString()
+                    };
+
+                    testResults.running--;
+                    testResults.failed++;
+                }
+
+                this.updateSummary();
+                this.displayResult(category, testIndex);
+            }
+
+            async runCategory(category) {
+                if (!this.tests[category]) return;
+
+                const section = document.getElementById(category);
+                section.classList.add('running');
+
+                for (let i = 0; i < this.tests[category].length; i++) {
+                    await this.runTest(category, i);
+                }
+
+                section.classList.remove('running');
+                const failedCount = this.results[category].filter(r => r.status === 'failed').length;
+                section.classList.add(failedCount > 0 ? 'failed' : 'passed');
+            }
+
+            async runAllTests() {
+                testResults = { total: 0, passed: 0, failed: 0, running: 0, categories: {} };
+                errorLog = [];
+
+                // Calculate total tests
+                testResults.total = Object.values(this.tests).reduce((sum, tests) => sum + tests.length, 0);
+
+                for (const category of Object.keys(this.tests)) {
+                    await this.runCategory(category);
+                }
+            }
+
+            displayResult(category, testIndex) {
+                const result = this.results[category][testIndex];
+                const container = document.getElementById(category + 'Results');
+
+                const resultElement = document.createElement('div');
+                resultElement.className = `p-3 rounded border-l-4 ${result.status === 'passed' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}`;
+
+                resultElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <i class="fas fa-${result.status === 'passed' ? 'check' : 'times'} mr-2 ${result.status === 'passed' ? 'text-green-600' : 'text-red-600'}"></i>
+                                <span class="font-medium">${result.name}</span>
+                                <span class="ml-2 text-sm text-gray-500">(${result.duration}ms)</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">${result.description}</p>
+                            ${result.status === 'failed' ? `<p class="text-sm text-red-600 mt-1">Error: ${result.error.message}</p>` : ''}
+                        </div>
+                        ${result.status === 'failed' ? `<button onclick="showErrorDetails('${category}', ${testIndex})" class="text-red-600 hover:text-red-800 text-sm"><i class="fas fa-info-circle"></i></button>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(resultElement);
+            }
+
+            updateSummary() {
+                document.getElementById('totalTests').textContent = testResults.total;
+                document.getElementById('passedTests').textContent = testResults.passed;
+                document.getElementById('failedTests').textContent = testResults.failed;
+                document.getElementById('runningTests').textContent = testResults.running;
+            }
+
+            clearResults() {
+                testResults = { total: 0, passed: 0, failed: 0, running: 0, categories: {} };
+                errorLog = [];
+
+                // Clear all result containers
+                Object.keys(this.tests).forEach(category => {
+                    const container = document.getElementById(category + 'Results');
+                    const section = document.getElementById(category);
+
+                    if (container) container.innerHTML = '';
+                    if (section) {
+                        section.classList.remove('running', 'passed', 'failed');
+                    }
+                });
+
+                this.updateSummary();
+            }
+
+            exportResults() {
+                const report = {
+                    timestamp: new Date().toISOString(),
+                    summary: testResults,
+                    testResults: this.results,
+                    errorLog: errorLog,
+                    environment: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        language: navigator.language,
+                        cookieEnabled: navigator.cookieEnabled,
+                        onLine: navigator.onLine,
+                        storageQuota: navigator.storage ? 'available' : 'not available'
+                    }
+                };
+
+                const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `naas-calculator-error-test-report-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize test framework
+        const testFramework = new ErrorTestFramework();
+
+        // Show error details modal
+        function showErrorDetails(category, testIndex) {
+            const result = testFramework.results[category][testIndex];
+            const modal = document.getElementById('errorLogModal');
+            const content = document.getElementById('errorLogContent');
+
+            content.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="font-semibold text-lg">${result.name}</h4>
+                    <p class="text-gray-600">${result.description}</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded">
+                    <h5 class="font-medium text-red-800 mb-2">Error Details:</h5>
+                    <pre class="test-result text-red-700 whitespace-pre-wrap">${JSON.stringify(result.error, null, 2)}</pre>
+                </div>
+                <div class="mt-4">
+                    <h5 class="font-medium mb-2">Related Error Log Entries:</h5>
+                    <div class="max-h-40 overflow-y-auto">
+                        ${errorLog.filter(log => {
+                            const logTime = new Date(log.timestamp);
+                            const testTime = new Date(result.timestamp);
+                            return Math.abs(logTime - testTime) < 5000; // Within 5 seconds
+                        }).map(log => `
+                            <div class="mb-2 p-2 bg-gray-100 rounded">
+                                <div class="text-sm font-medium">${log.type}</div>
+                                <div class="text-xs text-gray-600">${log.timestamp}</div>
+                                <div class="text-sm">${log.message || log.reason}</div>
+                            </div>
+                        `).join('') || '<p class="text-gray-500 text-sm">No related log entries found</p>'}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        // Event listeners
+        document.getElementById('runAllTests').addEventListener('click', () => testFramework.runAllTests());
+        document.getElementById('clearResults').addEventListener('click', () => testFramework.clearResults());
+        document.getElementById('exportResults').addEventListener('click', () => testFramework.exportResults());
+        document.getElementById('closeErrorModal').addEventListener('click', () => {
+            document.getElementById('errorLogModal').classList.add('hidden');
+        });
+
+        document.querySelectorAll('.run-category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const category = e.target.dataset.category;
+                testFramework.runCategory(category);
+            });
+        });
+    </script>
+
+    <!-- Test Definitions Script -->
+    <script src="error-test-definitions.js"></script>
+</body>
+</html>

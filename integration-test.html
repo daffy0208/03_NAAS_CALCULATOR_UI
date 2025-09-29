@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling Integration Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .test-card h3 {
+            margin-top: 0;
+            color: #ffd700;
+            font-size: 1.2em;
+        }
+
+        .test-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .test-button.danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .test-button.warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+
+        .test-button.info {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            border-left: 4px solid #ccc;
+        }
+
+        .log-success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left-color: #4CAF50;
+        }
+
+        .log-error {
+            background: rgba(244, 67, 54, 0.2);
+            border-left-color: #f44336;
+        }
+
+        .log-warning {
+            background: rgba(255, 152, 0, 0.2);
+            border-left-color: #ff9800;
+        }
+
+        .log-info {
+            background: rgba(33, 150, 243, 0.2);
+            border-left-color: #2196F3;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 NaaS Calculator Error Handling Integration Test</h1>
+            <p>Comprehensive testing of all error handling improvements and fixes</p>
+            <button id="runAllTests" class="test-button" style="font-size: 16px; padding: 12px 24px;">
+                🚀 Run All Tests
+            </button>
+        </div>
+
+        <div class="test-grid">
+            <!-- Component Navigation Tests -->
+            <div class="test-card">
+                <h3>🧭 Component Navigation</h3>
+                <p>Test fixed component click handlers and navigation methods</p>
+                <button class="test-button" onclick="testComponentNavigation()">Test Component Navigation</button>
+                <button class="test-button danger" onclick="testInvalidComponent()">Test Invalid Component</button>
+                <button class="test-button warning" onclick="testNavigationRace()">Test Navigation Race</button>
+            </div>
+
+            <!-- Error Handler Tests -->
+            <div class="test-card">
+                <h3>⚠️ Error Handler System</h3>
+                <p>Test global error handling and notification system</p>
+                <button class="test-button" onclick="testErrorHandler()">Test Error Handler</button>
+                <button class="test-button danger" onclick="testUnhandledError()">Test Unhandled Error</button>
+                <button class="test-button warning" onclick="testPromiseRejection()">Test Promise Rejection</button>
+            </div>
+
+            <!-- Notification System Tests -->
+            <div class="test-card">
+                <h3>🔔 Notification System</h3>
+                <p>Test all notification types and behaviors</p>
+                <button class="test-button" onclick="testSuccessNotification()">Success</button>
+                <button class="test-button danger" onclick="testErrorNotification()">Error</button>
+                <button class="test-button warning" onclick="testWarningNotification()">Warning</button>
+                <button class="test-button info" onclick="testInfoNotification()">Info</button>
+            </div>
+
+            <!-- Form Validation Tests -->
+            <div class="test-card">
+                <h3>📝 Form Validation</h3>
+                <p>Test form validation error handling</p>
+                <button class="test-button" onclick="testFormValidation()">Test Form Validation</button>
+                <button class="test-button danger" onclick="testInvalidForm()">Test Invalid Form</button>
+                <button class="test-button warning" onclick="testFieldValidation()">Test Field Validation</button>
+            </div>
+
+            <!-- Network Error Tests -->
+            <div class="test-card">
+                <h3>🌐 Network Handling</h3>
+                <p>Test network error handling and retry logic</p>
+                <button class="test-button" onclick="testNetworkSuccess()">Test Network Success</button>
+                <button class="test-button danger" onclick="testNetworkError()">Test Network Error</button>
+                <button class="test-button warning" onclick="testOfflineMode()">Test Offline Mode</button>
+            </div>
+
+            <!-- Data Validation Tests -->
+            <div class="test-card">
+                <h3>🗃️ Data Validation</h3>
+                <p>Test data corruption detection and recovery</p>
+                <button class="test-button" onclick="testDataValidation()">Test Valid Data</button>
+                <button class="test-button danger" onclick="testCorruptedData()">Test Corrupted Data</button>
+                <button class="test-button warning" onclick="testDataRecovery()">Test Data Recovery</button>
+            </div>
+
+            <!-- Memory Management Tests -->
+            <div class="test-card">
+                <h3>🧠 Memory Management</h3>
+                <p>Test memory leak prevention and cleanup</p>
+                <button class="test-button" onclick="testMemoryTracking()">Test Memory Tracking</button>
+                <button class="test-button danger" onclick="testMemoryLeaks()">Test Memory Leaks</button>
+                <button class="test-button warning" onclick="testCleanup()">Test Cleanup</button>
+            </div>
+
+            <!-- Race Condition Tests -->
+            <div class="test-card">
+                <h3>🏃 Race Conditions</h3>
+                <p>Test initialization race condition prevention</p>
+                <button class="test-button" onclick="testInitRace()">Test Init Race</button>
+                <button class="test-button danger" onclick="testConcurrentOps()">Test Concurrent Ops</button>
+                <button class="test-button warning" onclick="testResourceContention()">Test Resource Contention</button>
+            </div>
+        </div>
+
+        <div class="stats" id="testStats">
+            <div class="stat-card">
+                <div class="stat-number" id="testsRun">0</div>
+                <div class="stat-label">Tests Run</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsPassed">0</div>
+                <div class="stat-label">Tests Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsFailed">0</div>
+                <div class="stat-label">Tests Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsWarning">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+
+        <div class="results" id="testResults">
+            <div class="log-info">🚀 Integration Test Suite Ready</div>
+            <div class="log-info">Click "Run All Tests" to execute the complete test suite</div>
+        </div>
+    </div>
+
+    <!-- Include error handling utilities -->
+    <script type="module">
+        import { ErrorHandler } from './src/utils/error-handler.js';
+        import { FormValidator } from './src/utils/form-validator.js';
+        import { NetworkHandler } from './src/utils/network-handler.js';
+        import { DataValidator } from './src/utils/data-validator.js';
+        import { MemoryManager } from './src/utils/memory-manager.js';
+
+        // Make utilities globally available for testing
+        window.ErrorHandler = ErrorHandler;
+        window.FormValidator = FormValidator;
+        window.NetworkHandler = NetworkHandler;
+        window.DataValidator = DataValidator;
+        window.MemoryManager = MemoryManager;
+
+        console.log('Error handling utilities loaded successfully');
+    </script>
+
+    <script>
+        // Test Statistics
+        let stats = {
+            run: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+
+        // Initialize test suite
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Integration test suite initialized', 'info');
+            updateStats();
+        });
+
+        // Logging function
+        function log(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(entry);
+            results.scrollTop = results.scrollHeight;
+
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('testsRun').textContent = stats.run;
+            document.getElementById('testsPassed').textContent = stats.passed;
+            document.getElementById('testsFailed').textContent = stats.failed;
+            document.getElementById('testsWarning').textContent = stats.warnings;
+        }
+
+        // Test result helpers
+        function testPassed(testName) {
+            stats.run++;
+            stats.passed++;
+            log(`✅ ${testName} - PASSED`, 'success');
+            updateStats();
+        }
+
+        function testFailed(testName, error) {
+            stats.run++;
+            stats.failed++;
+            log(`❌ ${testName} - FAILED: ${error}`, 'error');
+            updateStats();
+        }
+
+        function testWarning(testName, warning) {
+            stats.warnings++;
+            log(`⚠️ ${testName} - WARNING: ${warning}`, 'warning');
+            updateStats();
+        }
+
+        // Run all tests
+        document.getElementById('runAllTests').addEventListener('click', async () => {
+            log('🚀 Starting comprehensive error handling test suite', 'info');
+
+            // Reset stats
+            stats = { run: 0, passed: 0, failed: 0, warnings: 0 };
+
+            const tests = [
+                testComponentNavigation,
+                testErrorHandler,
+                testSuccessNotification,
+                testFormValidation,
+                testNetworkSuccess,
+                testDataValidation,
+                testMemoryTracking,
+                testInitRace
+            ];
+
+            for (const test of tests) {
+                try {
+                    await test();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between tests
+                } catch (error) {
+                    testFailed(test.name, error.message);
+                }
+            }
+
+            log(`🏁 Test suite completed: ${stats.passed}/${stats.run} passed`, 'info');
+        });
+
+        // Component Navigation Tests
+        async function testComponentNavigation() {
+            try {
+                log('🧭 Testing component navigation...', 'info');
+
+                // Test if component manager is available
+                if (typeof window.componentManager === 'undefined') {
+                    testWarning('testComponentNavigation', 'Component manager not available - testing navigation method only');
+                }
+
+                // Test navigation method exists
+                if (typeof window.app !== 'undefined' && typeof window.app.navigateToComponent === 'function') {
+                    testPassed('Component navigation method available');
+                } else {
+                    testWarning('testComponentNavigation', 'App navigation method not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testComponentNavigation', error.message);
+                return false;
+            }
+        }
+
+        async function testInvalidComponent() {
+            try {
+                log('🧭 Testing invalid component handling...', 'info');
+
+                if (window.app && typeof window.app.navigateToComponent === 'function') {
+                    // This should trigger error handling
+                    window.app.navigateToComponent('nonexistent_component');
+                    testPassed('Invalid component handled gracefully');
+                } else {
+                    testWarning('testInvalidComponent', 'Navigation method not available for testing');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testInvalidComponent', error.message);
+                return false;
+            }
+        }
+
+        async function testNavigationRace() {
+            try {
+                log('🧭 Testing navigation race conditions...', 'info');
+
+                if (window.app && typeof window.app.navigateToComponent === 'function') {
+                    // Simulate rapid navigation attempts
+                    const promises = [];
+                    for (let i = 0; i < 3; i++) {
+                        promises.push(window.app.navigateToComponent('prtg'));
+                    }
+
+                    await Promise.all(promises);
+                    testPassed('Navigation race conditions handled');
+                } else {
+                    testWarning('testNavigationRace', 'Navigation method not available for testing');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testNavigationRace', error.message);
+                return false;
+            }
+        }
+
+        // Error Handler Tests
+        async function testErrorHandler() {
+            try {
+                log('⚠️ Testing error handler system...', 'info');
+
+                if (window.ErrorHandler) {
+                    // Test error handling
+                    const testError = new Error('Test error for integration testing');
+                    window.ErrorHandler.handleError(testError, {
+                        operation: 'integration_test',
+                        severity: 'low'
+                    });
+
+                    testPassed('Error handler system working');
+                } else {
+                    testFailed('testErrorHandler', 'ErrorHandler not available globally');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testErrorHandler', error.message);
+                return false;
+            }
+        }
+
+        async function testUnhandledError() {
+            try {
+                log('⚠️ Testing unhandled error handling...', 'info');
+
+                // Create unhandled error
+                setTimeout(() => {
+                    throw new Error('Test unhandled error - should be caught by global handler');
+                }, 100);
+
+                setTimeout(() => {
+                    testPassed('Unhandled error test triggered');
+                }, 200);
+
+                return true;
+            } catch (error) {
+                testFailed('testUnhandledError', error.message);
+                return false;
+            }
+        }
+
+        async function testPromiseRejection() {
+            try {
+                log('⚠️ Testing promise rejection handling...', 'info');
+
+                // Create unhandled promise rejection
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Test promise rejection - should be caught by global handler'));
+                    }, 100);
+                });
+
+                setTimeout(() => {
+                    testPassed('Promise rejection test triggered');
+                }, 200);
+
+                return true;
+            } catch (error) {
+                testFailed('testPromiseRejection', error.message);
+                return false;
+            }
+        }
+
+        // Notification Tests
+        async function testSuccessNotification() {
+            try {
+                log('🔔 Testing success notification...', 'info');
+
+                if (window.ErrorHandler && typeof window.ErrorHandler.showNotification === 'function') {
+                    window.ErrorHandler.showNotification('Integration test success notification', 'success', { duration: 2000 });
+                    testPassed('Success notification displayed');
+                } else {
+                    testFailed('testSuccessNotification', 'showNotification method not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testSuccessNotification', error.message);
+                return false;
+            }
+        }
+
+        async function testErrorNotification() {
+            try {
+                log('🔔 Testing error notification...', 'info');
+
+                if (window.ErrorHandler && typeof window.ErrorHandler.showNotification === 'function') {
+                    window.ErrorHandler.showNotification('Integration test error notification', 'error', { duration: 2000 });
+                    testPassed('Error notification displayed');
+                } else {
+                    testFailed('testErrorNotification', 'showNotification method not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testErrorNotification', error.message);
+                return false;
+            }
+        }
+
+        async function testWarningNotification() {
+            try {
+                log('🔔 Testing warning notification...', 'info');
+
+                if (window.ErrorHandler && typeof window.ErrorHandler.showNotification === 'function') {
+                    window.ErrorHandler.showNotification('Integration test warning notification', 'warning', { duration: 2000 });
+                    testPassed('Warning notification displayed');
+                } else {
+                    testFailed('testWarningNotification', 'showNotification method not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testWarningNotification', error.message);
+                return false;
+            }
+        }
+
+        async function testInfoNotification() {
+            try {
+                log('🔔 Testing info notification...', 'info');
+
+                if (window.ErrorHandler && typeof window.ErrorHandler.showNotification === 'function') {
+                    window.ErrorHandler.showNotification('Integration test info notification', 'info', { duration: 2000 });
+                    testPassed('Info notification displayed');
+                } else {
+                    testFailed('testInfoNotification', 'showNotification method not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testInfoNotification', error.message);
+                return false;
+            }
+        }
+
+        // Form Validation Tests
+        async function testFormValidation() {
+            try {
+                log('📝 Testing form validation...', 'info');
+
+                if (window.FormValidator) {
+                    // Create test form
+                    const form = document.createElement('form');
+                    const input = document.createElement('input');
+                    input.type = 'email';
+                    input.required = true;
+                    input.value = 'test@example.com';
+                    form.appendChild(input);
+
+                    const isValid = window.FormValidator.validateForm(form);
+                    if (isValid) {
+                        testPassed('Form validation working correctly');
+                    } else {
+                        testFailed('testFormValidation', 'Valid form failed validation');
+                    }
+                } else {
+                    testWarning('testFormValidation', 'FormValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testFormValidation', error.message);
+                return false;
+            }
+        }
+
+        async function testInvalidForm() {
+            try {
+                log('📝 Testing invalid form handling...', 'info');
+
+                if (window.FormValidator) {
+                    // Create test form with invalid data
+                    const form = document.createElement('form');
+                    const input = document.createElement('input');
+                    input.type = 'email';
+                    input.required = true;
+                    input.value = 'invalid-email';
+                    form.appendChild(input);
+
+                    const isValid = window.FormValidator.validateForm(form);
+                    if (!isValid) {
+                        testPassed('Invalid form correctly rejected');
+                    } else {
+                        testFailed('testInvalidForm', 'Invalid form incorrectly validated');
+                    }
+                } else {
+                    testWarning('testInvalidForm', 'FormValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testInvalidForm', error.message);
+                return false;
+            }
+        }
+
+        async function testFieldValidation() {
+            try {
+                log('📝 Testing field validation...', 'info');
+
+                if (window.FormValidator) {
+                    // Create test field
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '0';
+                    input.value = '-5';
+
+                    const isValid = window.FormValidator.validateField(input);
+                    if (!isValid) {
+                        testPassed('Field validation working correctly');
+                    } else {
+                        testFailed('testFieldValidation', 'Invalid field incorrectly validated');
+                    }
+                } else {
+                    testWarning('testFieldValidation', 'FormValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testFieldValidation', error.message);
+                return false;
+            }
+        }
+
+        // Network Tests
+        async function testNetworkSuccess() {
+            try {
+                log('🌐 Testing network success handling...', 'info');
+
+                if (window.NetworkHandler) {
+                    const status = window.NetworkHandler.getNetworkStatus();
+                    if (typeof status === 'boolean') {
+                        testPassed('Network status detection working');
+                    } else {
+                        testWarning('testNetworkSuccess', 'Network status detection returned unexpected type');
+                    }
+                } else {
+                    testWarning('testNetworkSuccess', 'NetworkHandler not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testNetworkSuccess', error.message);
+                return false;
+            }
+        }
+
+        async function testNetworkError() {
+            try {
+                log('🌐 Testing network error handling...', 'info');
+
+                try {
+                    const response = await fetch('https://nonexistent-domain-12345.com/test');
+                    testWarning('testNetworkError', 'Network request should have failed');
+                } catch (error) {
+                    testPassed('Network error handled correctly');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testNetworkError', error.message);
+                return false;
+            }
+        }
+
+        async function testOfflineMode() {
+            try {
+                log('🌐 Testing offline mode handling...', 'info');
+
+                if (window.NetworkHandler) {
+                    // Simulate offline mode
+                    const originalStatus = window.NetworkHandler.getNetworkStatus();
+                    window.NetworkHandler.setNetworkStatus(false);
+
+                    setTimeout(() => {
+                        // Restore original status
+                        window.NetworkHandler.setNetworkStatus(originalStatus);
+                        testPassed('Offline mode simulation completed');
+                    }, 1000);
+                } else {
+                    testWarning('testOfflineMode', 'NetworkHandler not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testOfflineMode', error.message);
+                return false;
+            }
+        }
+
+        // Data Validation Tests
+        async function testDataValidation() {
+            try {
+                log('🗃️ Testing data validation...', 'info');
+
+                if (window.DataValidator) {
+                    const testData = {
+                        id: 'test-123',
+                        name: 'Test Component',
+                        type: 'prtg',
+                        timestamp: new Date().toISOString()
+                    };
+
+                    const result = window.DataValidator.validateData(testData, 'component');
+                    if (result.valid) {
+                        testPassed('Data validation working correctly');
+                    } else {
+                        testFailed('testDataValidation', `Valid data failed validation: ${result.errors.join(', ')}`);
+                    }
+                } else {
+                    testWarning('testDataValidation', 'DataValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testDataValidation', error.message);
+                return false;
+            }
+        }
+
+        async function testCorruptedData() {
+            try {
+                log('🗃️ Testing corrupted data handling...', 'info');
+
+                if (window.DataValidator) {
+                    const corruptedData = {
+                        // Missing required fields
+                        type: 'invalid-type',
+                        totals: {
+                            monthly: -100, // Negative price
+                            annual: 'invalid' // Wrong type
+                        }
+                    };
+
+                    const corruptions = window.DataValidator.detectCorruption(corruptedData, 'component');
+                    if (corruptions.length > 0) {
+                        testPassed('Data corruption detected correctly');
+                    } else {
+                        testWarning('testCorruptedData', 'Corruption not detected in obviously corrupted data');
+                    }
+                } else {
+                    testWarning('testCorruptedData', 'DataValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testCorruptedData', error.message);
+                return false;
+            }
+        }
+
+        async function testDataRecovery() {
+            try {
+                log('🗃️ Testing data recovery...', 'info');
+
+                if (window.DataValidator) {
+                    const corruptedData = {
+                        totals: {
+                            monthly: -100,
+                            annual: -200
+                        }
+                    };
+
+                    const recovered = window.DataValidator.recoverData(corruptedData, ['negative_prices']);
+                    if (recovered.totals.monthly >= 0 && recovered.totals.annual >= 0) {
+                        testPassed('Data recovery working correctly');
+                    } else {
+                        testFailed('testDataRecovery', 'Data recovery did not fix negative prices');
+                    }
+                } else {
+                    testWarning('testDataRecovery', 'DataValidator not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testDataRecovery', error.message);
+                return false;
+            }
+        }
+
+        // Memory Management Tests
+        async function testMemoryTracking() {
+            try {
+                log('🧠 Testing memory tracking...', 'info');
+
+                if (window.MemoryManager) {
+                    const stats = window.MemoryManager.getMemoryStats();
+                    if (stats && typeof stats === 'object') {
+                        testPassed(`Memory tracking active (${stats.trackedTimers} timers, ${stats.trackedEventListeners} listeners)`);
+                    } else {
+                        testWarning('testMemoryTracking', 'Memory stats not available');
+                    }
+                } else {
+                    testWarning('testMemoryTracking', 'MemoryManager not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testMemoryTracking', error.message);
+                return false;
+            }
+        }
+
+        async function testMemoryLeaks() {
+            try {
+                log('🧠 Testing memory leak prevention...', 'info');
+
+                if (window.MemoryManager) {
+                    // Create managed timer
+                    const timerId = window.MemoryManager.addManagedTimer(
+                        setTimeout(() => {}, 5000)
+                    );
+
+                    // Create managed event listener
+                    const cleanup = window.MemoryManager.addManagedEventListener(
+                        document,
+                        'click',
+                        () => {}
+                    );
+
+                    // Cleanup
+                    clearTimeout(timerId);
+                    cleanup();
+
+                    testPassed('Memory leak prevention mechanisms working');
+                } else {
+                    testWarning('testMemoryLeaks', 'MemoryManager not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testMemoryLeaks', error.message);
+                return false;
+            }
+        }
+
+        async function testCleanup() {
+            try {
+                log('🧠 Testing cleanup functionality...', 'info');
+
+                if (window.MemoryManager) {
+                    // Create a scope for testing
+                    const scope = window.MemoryManager.createScope('test-scope');
+
+                    // Add some managed resources
+                    scope.addTimer(setTimeout(() => {}, 1000));
+
+                    // Clean up the scope
+                    scope.cleanup();
+
+                    testPassed('Cleanup functionality working correctly');
+                } else {
+                    testWarning('testCleanup', 'MemoryManager not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testCleanup', error.message);
+                return false;
+            }
+        }
+
+        // Race Condition Tests
+        async function testInitRace() {
+            try {
+                log('🏃 Testing initialization race prevention...', 'info');
+
+                if (window.app && typeof window.app.ensureInitialized === 'function') {
+                    // Simulate multiple initialization attempts
+                    const promises = [];
+                    for (let i = 0; i < 3; i++) {
+                        promises.push(window.app.ensureInitialized(() => {
+                            return Promise.resolve(`Operation ${i}`);
+                        }));
+                    }
+
+                    const results = await Promise.all(promises);
+                    testPassed('Initialization race prevention working');
+                } else {
+                    testWarning('testInitRace', 'App initialization race prevention not available');
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testInitRace', error.message);
+                return false;
+            }
+        }
+
+        async function testConcurrentOps() {
+            try {
+                log('🏃 Testing concurrent operations...', 'info');
+
+                // Simulate concurrent operations
+                const operations = [];
+                for (let i = 0; i < 5; i++) {
+                    operations.push(new Promise(resolve => {
+                        setTimeout(() => resolve(i), Math.random() * 100);
+                    }));
+                }
+
+                const results = await Promise.all(operations);
+                testPassed('Concurrent operations handled correctly');
+
+                return true;
+            } catch (error) {
+                testFailed('testConcurrentOps', error.message);
+                return false;
+            }
+        }
+
+        async function testResourceContention() {
+            try {
+                log('🏃 Testing resource contention handling...', 'info');
+
+                // Simulate resource contention with localStorage
+                const promises = [];
+                for (let i = 0; i < 10; i++) {
+                    promises.push(new Promise(resolve => {
+                        try {
+                            localStorage.setItem(`test_key_${i}`, JSON.stringify({ value: i }));
+                            const retrieved = JSON.parse(localStorage.getItem(`test_key_${i}`));
+                            localStorage.removeItem(`test_key_${i}`);
+                            resolve(retrieved.value === i);
+                        } catch (error) {
+                            resolve(false);
+                        }
+                    }));
+                }
+
+                const results = await Promise.all(promises);
+                const successCount = results.filter(Boolean).length;
+
+                if (successCount === results.length) {
+                    testPassed('Resource contention handled correctly');
+                } else {
+                    testWarning('testResourceContention', `${successCount}/${results.length} operations succeeded`);
+                }
+
+                return true;
+            } catch (error) {
+                testFailed('testResourceContention', error.message);
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
+    <title>NaaS Pricing Calculator</title>
+
+    <!-- External CSS with integrity checks -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+          rel="stylesheet"
+          integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw=="
+          crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          rel="stylesheet"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00a651">
+    <meta name="description" content="Professional Network-as-a-Service pricing calculator for PRTG monitoring, capital equipment, and support services">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="NaaS Calculator">
+    <meta name="application-name" content="NaaS Calculator">
+
+    <!-- Performance optimizations -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+
+    <!-- Favicon variants for different devices -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body class="font-inter">
+    <!-- Screen Reader Announcements -->
+    <div id="screenReaderAnnouncements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <div id="screenReaderAlerts" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50" role="status" aria-label="Application loading">
+        <div class="bg-white rounded-lg p-8 flex items-center space-x-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" aria-hidden="true"></div>
+            <span class="text-gray-700 font-medium">Loading NaaS Calculator...</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav role="navigation" aria-label="Main navigation">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Burger menu button -->
+                    <button id="mobileMenuBtn"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:hidden"
+                            aria-label="Toggle mobile navigation menu"
+                            aria-expanded="false"
+                            aria-controls="mobileMenu"
+                            type="button">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars text-xl" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="flex-shrink-0 ml-2 md:ml-0">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-200 flex items-center">
+                            <span class="material-icons text-[var(--qolcom-green)] mr-2" style="font-size: 28px;" aria-hidden="true">calculate</span>
+                            <span class="hidden sm:inline">NaaS Calculator</span>
+                            <span class="sm:hidden">NaaS</span>
+                        </h1>
+                    </div>
+
+                    <!-- Desktop navigation -->
+                    <div id="desktopNav" class="hidden ml-6 space-x-6 lg:space-x-8" role="tablist" aria-label="Main navigation tabs">
+                        <button id="dashboardBtn"
+                                class="nav-btn active border-[var(--qolcom-green)] text-[var(--qolcom-green)] inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-[var(--qolcom-green)] bg-opacity-20"
+                                data-view="dashboard"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="dashboardView"
+                                tabindex="0"
+                                type="button"
+                                title="Dashboard - Overview of recent quotes, quick actions, and component summaries">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]" aria-hidden="true">dashboard</span>Dashboard
+                        </button>
+                        <button id="componentsBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="components"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="componentsView"
+                                tabindex="-1"
+                                type="button"
+                                title="Components - Configure and price individual network components like PRTG monitoring, equipment, and support">
+                            <span class="material-icons mr-2" aria-hidden="true">widgets</span>Components
+                        </button>
+                        <button id="wizardBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="wizard"
+                                role="tab"
+                                title="Quote Wizard - Step-by-step guided process to build complete NaaS solutions with volume discounts"
+                                aria-selected="false"
+                                aria-controls="wizardView"
+                                tabindex="-1"
+                                type="button">
+                            <span class="material-icons mr-2" aria-hidden="true">receipt_long</span>Full Quote
+                        </button>
+                        <button id="historyBtn"
+                                class="nav-btn border-transparent text-gray-400 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
+                                data-view="history"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="historyView"
+                                tabindex="-1"
+                                type="button"
+                                title="History - View, manage, and reuse previously saved quotes and configurations">
+                            <span class="material-icons mr-2" aria-hidden="true">history</span>History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex items-center space-x-2 md:space-x-4" role="toolbar" aria-label="Data management tools">
+                    <button id="importBtn"
+                            class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 md:px-4 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            aria-label="Import data from file"
+                            type="button"
+                            title="Import - Load previously saved quotes from Excel (.xlsx) or JSON files">
+                        <span class="material-icons mr-1 md:mr-2" aria-hidden="true">file_upload</span>
+                        <span class="hidden sm:inline">Import</span>
+                    </button>
+                    <button id="exportBtn"
+                            class="bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white px-3 py-2 md:px-4 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            aria-label="Export data to file"
+                            type="button"
+                            title="Export - Save current quote as Excel (.xlsx), PDF, or JSON file for sharing or backup">
+                        <span class="material-icons mr-1 md:mr-2" aria-hidden="true">file_download</span>
+                        <span class="hidden sm:inline">Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div id="mobileMenu" class="hidden" aria-hidden="true" role="menu" aria-labelledby="mobileMenuBtn">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-[#2b3544] border-t border-gray-700">
+                    <button id="mobileDashboardBtn"
+                            class="mobile-nav-btn active text-[var(--qolcom-green)] block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="dashboard"
+                            role="menuitem"
+                            tabindex="0"
+                            type="button"
+                            title="Dashboard - Overview of recent quotes, quick actions, and component summaries">
+                        <span class="material-icons mr-2" aria-hidden="true">dashboard</span>Dashboard
+                    </button>
+                    <button id="mobileComponentsBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="components"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                            title="Components - Configure and price individual network components like PRTG monitoring, equipment, and support">
+                        <span class="material-icons mr-2" aria-hidden="true">widgets</span>Components
+                    </button>
+                    <button id="mobileWizardBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="wizard"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                            title="Quote Wizard - Step-by-step guided process to build complete NaaS solutions with volume discounts">
+                        <span class="material-icons mr-2" aria-hidden="true">receipt_long</span>Full Quote
+                    </button>
+                    <button id="mobileHistoryBtn"
+                            class="mobile-nav-btn text-gray-400 hover:text-white block px-3 py-2 text-base font-medium w-full text-left flex items-center"
+                            data-view="history"
+                            role="menuitem"
+                            tabindex="-1"
+                            type="button"
+                            title="History - View, manage, and reuse previously saved quotes and configurations">
+                        <span class="material-icons mr-2" aria-hidden="true">history</span>History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="w-full py-6 px-4 sm:px-6 lg:px-8" role="main" aria-label="Main content area">
+
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view-content" role="tabpanel" aria-labelledby="dashboardBtn" tabindex="0">
+            <header class="bg-[#1f2937] text-white p-8 rounded-2xl mb-8 shadow-lg border border-gray-700">
+                <h2 class="text-3xl font-bold mb-2" id="dashboardTitle">Welcome to NaaS Pricing Calculator</h2>
+                <p class="text-lg opacity-80">Choose how you'd like to calculate your Network-as-a-Service pricing</p>
+            </header>
+
+            <!-- Quick Access Cards -->
+            <section aria-labelledby="componentsGridTitle">
+                <h3 id="componentsGridTitle" class="sr-only">Available Components</h3>
+                <div id="dashboardComponents" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8" role="grid" aria-label="Component selection grid">
+                    <!-- Components will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Full Quote Builder -->
+            <section class="bg-[#1f2937] rounded-2xl my-8 p-8 text-center shadow-lg border border-gray-700" aria-labelledby="fullQuoteTitle">
+                <h3 id="fullQuoteTitle" class="text-2xl font-bold text-gray-200 mb-2">Complete NaaS Solution</h3>
+                <p class="text-gray-400 mb-6">Build a comprehensive quote with all components and get volume discounts</p>
+                <button id="startFullQuoteBtn"
+                        class="bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center mx-auto"
+                        aria-label="Start comprehensive quote builder wizard"
+                        type="button"
+                        title="Start building a complete NaaS solution - includes all components with automatic volume discounts and optimization recommendations">
+                    <span class="material-icons align-middle mr-2" aria-hidden="true">start</span>Start Full Quote Builder
+                </button>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="bg-[#1f2937] rounded-2xl p-6 shadow-lg border border-gray-700" aria-labelledby="recentQuotesTitle">
+                <h3 id="recentQuotesTitle" class="text-xl font-bold text-gray-200 mb-4">Recent Quotes</h3>
+                <div id="recentQuotes" class="space-y-3" role="list" aria-label="Recent quotes list">
+                    <!-- Recent quotes will be populated by JavaScript -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Components View -->
+        <div id="componentsView" class="view-content hidden" role="tabpanel" aria-labelledby="componentsBtn">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Component Pricing</h2>
+                <p class="text-gray-400">Price individual components or combine multiple services</p>
+                <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-3 mt-3 text-sm text-blue-200">
+                    <span class="material-icons text-blue-300 mr-2 text-base align-middle">help</span>
+                    <strong>Getting Started:</strong> Select a component from the sidebar to configure pricing. Use the Components tab for individual pricing or the Quote Wizard for complete solutions with volume discounts.
+                </div>
+            </div>
+
+            <!-- Component Selection Layout -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Component List Sidebar -->
+                <div class="lg:w-80 flex-shrink-0">
+                    <div class="bg-[#1f2937] rounded-xl shadow-md p-4 sticky top-6 border border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]">list</span>Components
+                        </h3>
+                        <div class="space-y-1 max-h-96 overflow-y-auto" id="componentList">
+                            <!-- Component items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component Configuration Main Area -->
+                <div class="flex-1">
+                    <div id="componentConfigArea" class="bg-[#1f2937] rounded-xl shadow-md p-6 min-h-96 border border-gray-700">
+                        <div class="text-center py-12">
+                            <span class="material-icons text-4xl text-gray-400 mb-4">widgets</span>
+                            <h3 class="text-xl font-medium text-gray-200 mb-2">Ready to Configure</h3>
+                            <p class="text-gray-400 mb-6">Select a component from the sidebar to start configuring and pricing your Network-as-a-Service solution</p>
+                            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                                <button id="viewFullQuoteBtn"
+                                        class="bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center justify-center"
+                                        title="Build Full Quote - Switch to the Quote Wizard for comprehensive solutions with volume discounts">
+                                    <span class="material-icons align-middle mr-2">receipt_long</span>Build Full Quote
+                                </button>
+                                <button id="quickStartBtn"
+                                        class="bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center"
+                                        title="Quick Start - Learn about NaaS components and pricing with guided examples">
+                                    <span class="material-icons align-middle mr-2">play_arrow</span>Quick Start
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Summary Sidebar -->
+                <div class="lg:w-80 flex-shrink-0">
+                    <div class="bg-[#1f2937] rounded-xl shadow-md p-4 sticky top-6 border border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                            <span class="material-icons mr-2 text-[var(--qolcom-green)]">calculate</span>Quote Summary
+                        </h3>
+                        <div id="pricingSummary" class="space-y-3">
+                            <div class="text-center py-6">
+                                <span class="material-icons text-3xl text-gray-500 mb-3 block">calculate</span>
+                                <h4 class="text-sm font-medium text-gray-300 mb-2">Quote Summary</h4>
+                                <p class="text-gray-400 text-sm mb-4">Configure components to see pricing details and build your quote</p>
+                                <div class="text-xs text-gray-500">
+                                    <p>✓ Real-time pricing</p>
+                                    <p>✓ Multiple export formats</p>
+                                    <p>✓ Volume discounts applied</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-600">
+                            <button id="exportComponentsQuote"
+                                    class="w-full bg-[var(--qolcom-green)] hover:bg-opacity-80 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center">
+                                <span class="material-icons align-middle mr-2">download</span>Export Quote
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wizard View -->
+        <div id="wizardView" class="view-content hidden" role="tabpanel" aria-labelledby="wizardBtn">
+            <div class="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-200 mb-2">Full Quote Builder</h2>
+                    <p class="text-gray-400">Complete workflow for comprehensive NaaS solutions</p>
+                </div>
+                <button id="viewComponentsBtn"
+                        class="bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors flex items-center"
+                        title="View Components - Switch to individual component pricing mode for detailed configuration">
+                    <span class="material-icons align-middle mr-2">widgets</span>View Components
+                </button>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="bg-[#1f2937] rounded-xl shadow-md p-6 mb-6 border border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2 overflow-x-auto" id="stepIndicators">
+                        <!-- Step indicators will be populated by JavaScript -->
+                    </div>
+                    <div class="text-sm text-gray-400">
+                        Step <span id="currentStep">1</span> of <span id="totalSteps">18</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-600 rounded-full h-2">
+                    <div id="progressBar" class="bg-[var(--qolcom-green)] h-2 rounded-full transition-all duration-300" style="width: 5.6%"></div>
+                </div>
+            </div>
+
+            <!-- Wizard Content -->
+            <div id="wizardContent" class="bg-[#1f2937] rounded-xl shadow-md p-8 border border-gray-700">
+                <!-- Wizard steps will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="view-content hidden" role="tabpanel" aria-labelledby="historyBtn">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-200 mb-2">Quote History</h2>
+                <p class="text-gray-400">View and manage your saved quotes</p>
+            </div>
+
+            <div class="bg-[#1f2937] rounded-xl shadow-md p-6 border border-gray-700">
+                <div id="historyContent">
+                    <!-- History content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modals -->
+    <!-- Import Modal -->
+    <div id="importModal" class="modal hidden" role="dialog" aria-labelledby="importModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="importModalTitle" class="modal-title">Import Data</h3>
+                <button class="modal-close" aria-label="Close import modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label for="importType" class="block text-sm font-medium text-gray-700 mb-2">Select File Type</label>
+                    <select id="importType" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="excel">Excel (.xlsx)</option>
+                        <option value="csv">CSV (.csv)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="importFile" class="block text-sm font-medium text-gray-700 mb-2">Choose File</label>
+                    <input type="file" id="importFile" class="w-full p-3 border border-gray-300 rounded-lg" accept=".xlsx,.csv">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelImport" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button id="confirmImport" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal hidden" role="dialog" aria-labelledby="exportModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="exportModalTitle" class="modal-title">Export Data</h3>
+                <button class="modal-close" aria-label="Close export modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label for="exportType" class="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
+                    <select id="exportType" class="w-full p-3 border border-gray-300 rounded-lg">
+                        <option value="excel">Excel (.xlsx)</option>
+                        <option value="csv">CSV (.csv)</option>
+                        <option value="pdf">PDF Report</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Include</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="exportCurrent" checked class="mr-2">
+                            Current Quote
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="exportHistory" class="mr-2">
+                            Quote History
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="exportComponents" class="mr-2">
+                            Component Details
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelExport" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button id="confirmExport" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Boundary -->
+    <div id="errorBoundary" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <span class="material-icons text-red-600 text-2xl">error</span>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Application Error</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-600" id="errorMessage">
+                    An unexpected error occurred. Please refresh the page and try again.
+                </p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="errorRefresh" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Refresh Page
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts with integrity checks -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+            integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
+            crossorigin="anonymous" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+            integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
+            crossorigin="anonymous" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"
+            integrity="sha512-M72KfQY7kRvfaEq8gIUlQ4E4y8YOfXWqRLvNH4gkKM8mYXqGP3wEbg0iT5qT/YYFLaaG1JDJxhTLDYN/qjYjA=="
+            crossorigin="anonymous" async></script>
+
+    <!-- Application Scripts -->
+    <script src="js/error-boundary.js" defer></script>
+    <script src="js/storage-manager.js" defer></script>
+    <script src="js/data-store.js" defer></script>
+    <script src="js/calculations.js" defer></script>
+    <script src="js/dependency-graph.js" defer></script>
+    <script src="js/calculation-orchestrator.js" defer></script>
+    <script src="js/import-validator.js" defer></script>
+    <script src="js/components.js" defer></script>
+    <script src="js/wizard.js" defer></script>
+    <script src="js/import-export.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="browser-test.js" defer></script>
+    <script src="power-user-stress-tests.js" defer></script>
+    <script src="bulk-operations-stress-test.js" defer></script>
+    <script src="issue-detection-and-fixes.js" defer></script>
+    <script src="comprehensive-test-suite.js" defer></script>
+
+    <script>
+        // Hide loading indicator once everything is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 500);
+        });
+
+        // Error refresh handler
+        document.getElementById('errorRefresh')?.addEventListener('click', () => {
+            window.location.reload();
+        });
+    </script>
+
+</body>
+</html>
