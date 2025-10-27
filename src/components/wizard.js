@@ -3,6 +3,9 @@
  * Handles the complete quote building workflow with progressive disclosure
  */
 
+// Import DOMPurify from global scope (loaded via CDN in index.html)
+const DOMPurify = window.DOMPurify;
+
 class QuoteWizard {
     constructor(calculator) {
         this.calculator = calculator;
@@ -1163,10 +1166,17 @@ class QuoteWizard {
         // Show error notification
         const notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 p-4 bg-red-600 text-white rounded-lg shadow-lg z-50';
+
+        // Sanitize message before inserting into DOM to prevent XSS attacks
+        const sanitizedMessage = DOMPurify ? DOMPurify.sanitize(message, {
+            ALLOWED_TAGS: [],  // Strip all HTML tags
+            KEEP_CONTENT: true  // Keep text content
+        }) : String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
         notification.innerHTML = `
             <div class="flex items-center">
                 <i class="fas fa-exclamation-circle mr-2"></i>
-                ${message}
+                ${sanitizedMessage}
             </div>
         `;
 

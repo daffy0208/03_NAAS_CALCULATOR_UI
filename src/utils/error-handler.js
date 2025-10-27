@@ -116,8 +116,9 @@ export class ErrorHandler {
   static storeError(errorInfo) {
     this.errors.set(errorInfo.id, errorInfo);
 
-    // Keep only last 100 errors
-    if (this.errors.size > 100) {
+    // Keep only last N errors (configurable)
+    const maxErrors = typeof AppConfig !== 'undefined' ? AppConfig.MAX_ARRAY_SIZE : 100;
+    if (this.errors.size > maxErrors) {
       const oldestKey = this.errors.keys().next().value;
       this.errors.delete(oldestKey);
     }
@@ -200,8 +201,19 @@ export class ErrorHandler {
    * @param {Object} options - Additional options
    */
   static showNotification(message, type = 'error', options = {}) {
+    // Use AppConfig constants if available
+    const getDefaultDuration = () => {
+      if (typeof AppConfig === 'undefined') return 5000;
+      switch (type) {
+        case 'error': return AppConfig.NOTIFICATION_AUTO_REMOVE_ERROR_MS;
+        case 'warning': return AppConfig.NOTIFICATION_AUTO_REMOVE_WARNING_MS;
+        case 'success': return AppConfig.NOTIFICATION_AUTO_REMOVE_SUCCESS_MS;
+        default: return AppConfig.NOTIFICATION_AUTO_REMOVE_SUCCESS_MS;
+      }
+    };
+
     const {
-      duration = 5000,
+      duration = getDefaultDuration(),
       persistent = false,
       onClick = null,
       allowHtml = false
@@ -284,8 +296,17 @@ export class ErrorHandler {
 
     // Position notifications to stack
     const existingNotifications = document.querySelectorAll('.error-notification');
+
+    // Limit max notifications using AppConfig
+    const maxNotifications = typeof AppConfig !== 'undefined' ? AppConfig.MAX_NOTIFICATION_COUNT : 3;
+    if (existingNotifications.length >= maxNotifications) {
+      // Remove oldest notification
+      existingNotifications[0].remove();
+    }
+
     if (existingNotifications.length > 0) {
-      const topOffset = 20 + existingNotifications.length * 80;
+      const stackOffset = typeof AppConfig !== 'undefined' ? AppConfig.NOTIFICATION_STACK_OFFSET_REM : 5;
+      const topOffset = 20 + existingNotifications.length * (stackOffset * 16); // Convert rem to px (assuming 16px base)
       notification.style.top = `${topOffset}px`;
     }
 
@@ -433,24 +454,108 @@ export class ErrorHandler {
    */
   static getErrorStats() {
     const errors = this.getAllErrors();
+    const oneDayMs = typeof AppConfig !== 'undefined' ? AppConfig.AUTOSAVE_DATA_EXPIRY_MS : 24 * 60 * 60 * 1000;
+
     const stats = {
       total: errors.length,
       byType: {},
       byComponent: {},
+      bySeverity: {},
       recent: errors.filter(e =>
-        new Date() - new Date(e.timestamp) < 24 * 60 * 60 * 1000
+        new Date() - new Date(e.timestamp) < oneDayMs
       ).length
     };
 
     errors.forEach(error => {
       const type = error.context.type || 'unknown';
       const component = error.context.component || 'unknown';
+      const severity = error.context.severity || 'unknown';
 
       stats.byType[type] = (stats.byType[type] || 0) + 1;
       stats.byComponent[component] = (stats.byComponent[component] || 0) + 1;
+      stats.bySeverity[severity] = (stats.bySeverity[severity] || 0) + 1;
     });
 
     return stats;
+  }
+
+  /**
+   * Retry failed operation with exponential backoff
+   * @param {Function} operation - Operation to retry
+   * @param {Object} options - Retry options
+   * @returns {Promise} - Result of operation
+   */
+  static async retryOperation(operation, options = {}) {
+    const {
+      maxAttempts = typeof AppConfig !== 'undefined' ? AppConfig.MAX_STORAGE_RECONNECT_ATTEMPTS : 3,
+      baseDelay = typeof AppConfig !== 'undefined' ? AppConfig.STORAGE_RECONNECTION_DELAY_MS : 1000,
+      maxDelay = 10000,
+      onRetry = null
+    } = options;
+
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+
+        if (attempt === maxAttempts) {
+          break;
+        }
+
+        // Exponential backoff with jitter
+        const delay = Math.min(
+          baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100,
+          maxDelay
+        );
+
+        if (onRetry) {
+          onRetry(attempt, maxAttempts, delay, error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
+   * Create safe error boundary wrapper for async functions
+   * @param {Function} fn - Function to wrap
+   * @param {Object} context - Error context
+   * @returns {Function} - Wrapped function
+   */
+  static createErrorBoundary(fn, context = {}) {
+    return async (...args) => {
+      try {
+        return await fn(...args);
+      } catch (error) {
+        this.handleError(error, {
+          ...context,
+          functionName: fn.name,
+          arguments: args.map(arg => typeof arg === 'object' ? '[Object]' : String(arg)).join(', ')
+        });
+        throw error;
+      }
+    };
+  }
+
+  /**
+   * Check if error rate is too high
+   * @param {number} timeWindowMs - Time window to check (default 1 minute)
+   * @returns {boolean} - True if error rate is high
+   */
+  static isErrorRateHigh(timeWindowMs = 60000) {
+    const threshold = typeof AppConfig !== 'undefined' ? AppConfig.MAX_ERROR_COUNT_THRESHOLD : 10;
+    const now = Date.now();
+    const recentErrors = Array.from(this.errors.values()).filter(
+      error => now - new Date(error.timestamp).getTime() < timeWindowMs
+    );
+
+    return recentErrors.length > threshold;
   }
 }
 

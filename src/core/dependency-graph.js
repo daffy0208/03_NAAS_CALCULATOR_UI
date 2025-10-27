@@ -174,8 +174,10 @@ class DependencyGraph {
         const dependents = [];
 
         for (const [type, component] of Object.entries(this.graph)) {
-            if (component.dependencies.includes(componentType) ||
-                (component.dependencies.includes('*') && componentType !== type)) {
+            // Use Set for O(1) lookups instead of O(n) includes
+            const depSet = new Set(component.dependencies);
+            if (depSet.has(componentType) ||
+                (depSet.has('*') && componentType !== type)) {
                 dependents.push(type);
             }
         }
@@ -190,6 +192,9 @@ class DependencyGraph {
         const visited = new Set();
         const recursionStack = new Set();
         const result = [];
+
+        // Create Set for O(1) lookups instead of O(n) includes
+        const componentSet = new Set(componentTypes);
 
         // Validate for circular dependencies first
         if (!this.isAcyclic(componentTypes)) {
@@ -215,7 +220,7 @@ class DependencyGraph {
                     // Handle wildcard dependencies (all other active components)
                     const allOthers = componentTypes.filter(t => t !== componentType);
                     allOthers.forEach(other => visit(other));
-                } else if (componentTypes.includes(dep)) {
+                } else if (componentSet.has(dep)) {
                     visit(dep);
                 }
             }
@@ -248,6 +253,9 @@ class DependencyGraph {
         const visited = new Set();
         const recursionStack = new Set();
 
+        // Create Set for O(1) lookups instead of O(n) includes
+        const componentSet = new Set(componentTypes);
+
         const hasCycle = (componentType) => {
             if (recursionStack.has(componentType)) {
                 return true;
@@ -269,7 +277,7 @@ class DependencyGraph {
                             return true;
                         }
                     }
-                } else if (componentTypes.includes(dep) && hasCycle(dep)) {
+                } else if (componentSet.has(dep) && hasCycle(dep)) {
                     return true;
                 }
             }
@@ -427,6 +435,7 @@ class DependencyGraph {
         }
 
         // Generate edges
+        const componentTypeSet = new Set(componentTypes);
         for (const componentType of componentTypes) {
             const component = this.graph[componentType];
             for (const dependency of component.dependencies) {
@@ -441,7 +450,7 @@ class DependencyGraph {
                                 type: 'wildcard'
                             });
                         });
-                } else if (componentTypes.includes(dependency)) {
+                } else if (componentTypeSet.has(dependency)) {
                     edges.push({
                         from: dependency,
                         to: componentType,

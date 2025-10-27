@@ -9,11 +9,15 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: './index.html',
-        app: './src/main.js'
+        main: './index.html'
+        // Note: src/main.js is imported by index.html and will be bundled automatically
+        // It only contains CSS imports for v1.0 (global class architecture)
+        // v1.1+ will migrate to ES modules with proper entry points
       },
       output: {
         manualChunks: {
+          // Note: These vendors are currently loaded via CDN in index.html
+          // Will be bundled in v1.1+ when migrating to ES modules
           'vendor-xlsx': ['xlsx'],
           'vendor-jspdf': ['jspdf'],
           'vendor-dompurify': ['dompurify']

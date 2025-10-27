@@ -5,11 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self'
+            https://cdnjs.cloudflare.com
+            https://cdn.jsdelivr.net
+            'sha256-b8Duv4onosuoPXMNF3knwXat2tffFvbkhM/qSHQy9u4=';
+        style-src 'self'
+            'unsafe-inline'
+            https://cdn.jsdelivr.net
+            https://cdnjs.cloudflare.com
+            https://fonts.googleapis.com;
+        font-src 'self'
+            https://fonts.gstatic.com
+            data:;
+        img-src 'self'
+            data:
+            https:;
+        connect-src 'self';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+        upgrade-insecure-requests;
+    ">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
     <title>NaaS Pricing Calculator</title>
 
@@ -475,6 +499,8 @@
             crossorigin="anonymous" async></script>
 
     <!-- Application Scripts -->
+    <!-- Configuration must load first -->
+    <script src="src/config.js"></script>
     <script src="src/components/error-boundary.js" defer></script>
     <script src="src/services/storage-manager.js" defer></script>
     <script src="src/services/data-store.js" defer></script>
@@ -485,6 +511,9 @@
     <script src="src/components/components.js" defer></script>
     <script src="src/components/wizard.js" defer></script>
     <script src="src/utils/import-export.js" defer></script>
+    <!-- Managers must load before app.js -->
+    <script src="src/managers/view-manager.js" defer></script>
+    <script src="src/managers/auto-save-manager.js" defer></script>
     <script src="src/app.js" defer></script>
 
     <script>
@@ -499,7 +528,47 @@
         document.getElementById('errorRefresh')?.addEventListener('click', () => {
             window.location.reload();
         });
+
+        // CDN fallback mechanism
+        // Verify CDN libraries loaded, use local fallbacks if needed
+        (function() {
+            const cdnLibs = [
+                {
+                    test: () => typeof XLSX !== 'undefined',
+                    name: 'XLSX',
+                    local: '/node_modules/xlsx/dist/xlsx.full.min.js'
+                },
+                {
+                    test: () => typeof jspdf !== 'undefined',
+                    name: 'jsPDF',
+                    local: '/node_modules/jspdf/dist/jspdf.umd.min.js'
+                },
+                {
+                    test: () => typeof DOMPurify !== 'undefined',
+                    name: 'DOMPurify',
+                    local: '/node_modules/dompurify/dist/purify.min.js'
+                }
+            ];
+
+            // Check after CDN scripts have had time to load
+            setTimeout(() => {
+                cdnLibs.forEach(lib => {
+                    if (!lib.test()) {
+                        console.warn(`${lib.name} CDN failed, loading local fallback`);
+                        const script = document.createElement('script');
+                        script.src = lib.local;
+                        script.onerror = () => {
+                            console.error(`Failed to load ${lib.name} from both CDN and local`);
+                        };
+                        document.head.appendChild(script);
+                    }
+                });
+            }, 1000);
+        })();
     </script>
+
+    <!-- Vite entry point for CSS bundling -->
+    <script type="module" src="/src/main.js"></script>
 
 </body>
 </html>

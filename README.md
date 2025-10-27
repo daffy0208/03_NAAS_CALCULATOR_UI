@@ -32,16 +32,36 @@ A comprehensive web-based Network-as-a-Service pricing calculator that replicate
 ```
 naas-calculator/
 ├── index.html              # Main application entry point
+├── src/
+│   ├── app.js              # Main application controller (2189 lines)
+│   ├── main.js             # Application entry point
+│   ├── config.js           # Application configuration
+│   ├── core/               # Core calculation system
+│   │   ├── calculations.js       # All pricing formulas
+│   │   ├── calculation-orchestrator.js  # Dependency-based execution
+│   │   └── dependency-graph.js   # Component relationships
+│   ├── components/         # UI Components
+│   │   ├── components.js   # Individual component forms
+│   │   └── wizard.js       # Multi-step quote builder
+│   ├── services/           # Data and storage services
+│   │   ├── data-store.js   # Centralized state management
+│   │   └── storage-manager.js  # localStorage persistence
+│   ├── managers/           # Feature managers
+│   └── utils/              # Utility functions
+│       ├── security.js     # Input sanitization
+│       ├── error-handler.js  # Global error handling
+│       └── import-export.js  # Excel/CSV import/export
 ├── css/
 │   └── styles.css          # Custom styles and responsive design
-├── js/
-│   ├── app.js             # Main application controller
-│   ├── calculations.js    # Core pricing calculation engine
-│   ├── components.js      # Component management and UI
-│   ├── wizard.js          # Full quote wizard workflow
-│   └── import-export.js   # Excel/CSV import/export functionality
-└── README.md              # This documentation
+├── components/             # TypeScript/React scaffolding (not wired up)
+├── lib/                    # Integration stubs (not wired up)
+└── docs/                   # Documentation
+    ├── PRD.md              # Product requirements
+    ├── DEVELOPMENT_ROADMAP.md  # Development strategy
+    └── TECHNICAL_DEBT.md   # Known technical debt
 ```
+
+**Note:** This is a Vite-based application. The actual architecture uses ES modules with `src/` as the primary codebase. See `CLAUDE.md` for detailed architecture documentation.
 
 ## 💻 Technology Stack
 
@@ -68,10 +88,22 @@ naas-calculator/
 
 ### For Developers
 1. Clone or download the project files
-2. Open in your preferred code editor
-3. Serve via local web server for full functionality
-4. Modify `js/calculations.js` for pricing logic changes
-5. Customize `css/styles.css` for branding and styling
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+4. Open http://localhost:8000 in your browser
+5. Modify `src/core/calculations.js` for pricing logic changes
+6. Customize Tailwind classes or `css/styles.css` for branding
+
+**Development Commands:**
+```bash
+npm run dev       # Start dev server (localhost:8000)
+npm run build     # Production build
+npm run preview   # Preview production build
+npm test          # Run unit tests (Vitest)
+npm run test:e2e  # Run E2E tests (Cypress)
+npm run lint      # Lint and auto-fix
+npm run format    # Format code with Prettier
+```
 
 ### Browser Requirements
 - Modern browsers with ES6+ support

@@ -3,6 +3,9 @@
  * Handles individual component pricing interfaces and logic
  */
 
+// Import DOMPurify from global scope (loaded via CDN in index.html)
+const DOMPurify = window.DOMPurify;
+
 class ComponentManager {
     constructor(calculator) {
         this.calculator = calculator;
@@ -31,6 +34,18 @@ class ComponentManager {
             assessment: {},
             otherCosts: {}
         };
+
+        // DOM element cache for performance optimization
+        this.domCache = {
+            equipmentList: null,
+            pricingSummary: null,
+            lastEquipmentHash: null,
+            lastPricingHash: null
+        };
+
+        // Notification pool for reuse
+        this.notificationPool = [];
+        this.activeNotifications = new Set();
 
         // Load saved component data
         this.loadComponentData();
@@ -1502,18 +1517,38 @@ class ComponentManager {
 
     renderEquipmentList(equipment) {
         try {
-            const listContainer = document.getElementById('equipmentList');
+            // Use cached element or query DOM once
+            if (!this.domCache.equipmentList) {
+                this.domCache.equipmentList = document.getElementById('equipmentList');
+            }
+            const listContainer = this.domCache.equipmentList;
+
             if (!listContainer) {
                 console.warn('Equipment list container not found');
                 return;
             }
 
+            // Handle empty state efficiently
             if (!equipment || equipment.length === 0) {
-                listContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No equipment added</p>';
+                if (listContainer.children.length !== 1 || listContainer.children[0].tagName !== 'P') {
+                    listContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No equipment added</p>';
+                }
                 return;
             }
 
-            let listHTML = '<div class="space-y-2">';
+            // Calculate hash to detect changes
+            const equipmentHash = JSON.stringify(equipment);
+            if (this.domCache.lastEquipmentHash === equipmentHash) {
+                // No changes, skip re-render
+                return;
+            }
+            this.domCache.lastEquipmentHash = equipmentHash;
+
+            // Use DocumentFragment for batch DOM updates
+            const fragment = document.createDocumentFragment();
+            const wrapper = document.createElement('div');
+            wrapper.className = 'space-y-2';
+
             equipment.forEach((item, index) => {
                 // Validate equipment item
                 if (!item || typeof item !== 'object') {
@@ -1521,29 +1556,61 @@ class ComponentManager {
                     return;
                 }
 
-                const description = item.description || 'Unknown Equipment';
+                // Sanitize description to prevent XSS attacks
+                const rawDescription = item.description || 'Unknown Equipment';
+                const description = DOMPurify ? DOMPurify.sanitize(rawDescription, {
+                    ALLOWED_TAGS: [],  // Strip all HTML tags
+                    KEEP_CONTENT: true  // Keep text content
+                }) : String(rawDescription).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
                 const quantity = parseInt(item.quantity) || 0;
                 const unitCost = parseFloat(item.unitCost) || 0;
                 const totalCost = unitCost * quantity;
 
-                listHTML += `
-                    <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg border border-gray-600">
-                        <div class="flex-1">
-                            <div class="font-medium text-gray-200">${description}</div>
-                            <div class="text-sm text-gray-400">Qty: ${quantity} × ${this.calculator.formatCurrency(unitCost)}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-medium text-[var(--qolcom-green)]">${this.calculator.formatCurrency(totalCost)}</div>
-                            <button class="text-red-400 hover:text-red-300 text-sm" onclick="componentManager.removeEquipment(${index})">
-                                <i class="fas fa-trash"></i> Remove
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            listHTML += '</div>';
+                // Create DOM elements instead of string concatenation
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex items-center justify-between p-3 bg-gray-700 rounded-lg border border-gray-600';
 
-            listContainer.innerHTML = listHTML;
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'flex-1';
+
+                const descDiv = document.createElement('div');
+                descDiv.className = 'font-medium text-gray-200';
+                descDiv.textContent = description;
+
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'text-sm text-gray-400';
+                detailDiv.textContent = `Qty: ${quantity} × ${this.calculator.formatCurrency(unitCost)}`;
+
+                leftDiv.appendChild(descDiv);
+                leftDiv.appendChild(detailDiv);
+
+                const rightDiv = document.createElement('div');
+                rightDiv.className = 'text-right';
+
+                const costDiv = document.createElement('div');
+                costDiv.className = 'font-medium text-[var(--qolcom-green)]';
+                costDiv.textContent = this.calculator.formatCurrency(totalCost);
+
+                const button = document.createElement('button');
+                button.className = 'text-red-400 hover:text-red-300 text-sm';
+                button.onclick = () => this.removeEquipment(index);
+                button.innerHTML = '<i class="fas fa-trash"></i> Remove';
+
+                rightDiv.appendChild(costDiv);
+                rightDiv.appendChild(button);
+
+                itemDiv.appendChild(leftDiv);
+                itemDiv.appendChild(rightDiv);
+
+                wrapper.appendChild(itemDiv);
+            });
+
+            fragment.appendChild(wrapper);
+
+            // Single DOM operation - replace entire content
+            listContainer.innerHTML = '';
+            listContainer.appendChild(fragment);
         } catch (error) {
             console.error('Error rendering equipment list:', error);
         }
@@ -2202,26 +2269,101 @@ class ComponentManager {
     }
 
     showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-600 text-white' : 
-            type === 'error' ? 'bg-red-600 text-white' : 
-            'bg-blue-600 text-white'
-        }`;
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
-                ${message}
-            </div>
-        `;
+        // Reuse notification element from pool or create new one
+        let notification = this.notificationPool.pop();
 
-        document.body.appendChild(notification);
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.className = 'fixed p-4 rounded-lg shadow-lg z-50 transition-all duration-300';
+
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'flex items-center';
+
+            const icon = document.createElement('i');
+            icon.className = 'fas mr-2';
+
+            const messageSpan = document.createElement('span');
+
+            contentWrapper.appendChild(icon);
+            contentWrapper.appendChild(messageSpan);
+            notification.appendChild(contentWrapper);
+
+            // Store references for quick updates
+            notification._icon = icon;
+            notification._message = messageSpan;
+        }
+
+        // Update notification styling based on type
+        const bgClass = type === 'success' ? 'bg-green-600' :
+                        type === 'error' ? 'bg-red-600' :
+                        'bg-blue-600';
+
+        const iconClass = type === 'success' ? 'fa-check-circle' :
+                          type === 'error' ? 'fa-exclamation-circle' :
+                          'fa-info-circle';
+
+        notification.className = `fixed p-4 rounded-lg shadow-lg z-50 transition-all duration-300 text-white ${bgClass}`;
+        notification._icon.className = `fas ${iconClass} mr-2`;
+
+        // Sanitize message before inserting into DOM to prevent XSS attacks
+        const sanitizedMessage = DOMPurify ? DOMPurify.sanitize(message, {
+            ALLOWED_TAGS: [],  // Strip all HTML tags
+            KEEP_CONTENT: true  // Keep text content
+        }) : String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        notification._message.textContent = sanitizedMessage;
+
+        // Position notification based on active count
+        const activeCount = this.activeNotifications.size;
+        notification.style.top = `${16 + (activeCount * 80)}px`;
+        notification.style.right = '16px';
+
+        // Track active notification
+        this.activeNotifications.add(notification);
+
+        // Use requestAnimationFrame for smooth appearance
+        requestAnimationFrame(() => {
+            document.body.appendChild(notification);
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        });
 
         // Auto remove after 3 seconds
-        setTimeout(() => {
-            notification.remove();
+        const timeoutId = setTimeout(() => {
+            this.hideNotification(notification);
         }, 3000);
+
+        notification._timeoutId = timeoutId;
+    }
+
+    hideNotification(notification) {
+        // Fade out animation
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+
+            this.activeNotifications.delete(notification);
+
+            // Return to pool if not too many cached
+            if (this.notificationPool.length < 5) {
+                this.notificationPool.push(notification);
+            }
+
+            // Reposition remaining notifications
+            this.repositionNotifications();
+        }, 300);
+    }
+
+    repositionNotifications() {
+        let index = 0;
+        this.activeNotifications.forEach(notification => {
+            notification.style.top = `${16 + (index * 80)}px`;
+            index++;
+        });
     }
 
 
@@ -2233,50 +2375,182 @@ class ComponentManager {
 
     // Update pricing summary sidebar
     updatePricingSummary() {
-        const pricingSummary = document.getElementById('pricingSummary');
+        // Use cached element or query once
+        if (!this.domCache.pricingSummary) {
+            this.domCache.pricingSummary = document.getElementById('pricingSummary');
+        }
+        const pricingSummary = this.domCache.pricingSummary;
+
         if (!pricingSummary) return;
 
         const quote = this.getCombinedQuote();
-        
+
+        // Handle empty state
         if (Object.keys(quote.components).length === 0) {
-            pricingSummary.innerHTML = `
-                <div class="text-center py-4">
-                    <p class="text-gray-400">Configure components to see pricing</p>
-                </div>
-            `;
+            if (!pricingSummary.querySelector('.text-gray-400')) {
+                pricingSummary.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-gray-400">Configure components to see pricing</p>
+                    </div>
+                `;
+            }
             return;
         }
 
-        pricingSummary.innerHTML = `
-            <div class="space-y-3">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-[var(--qolcom-green)]">${this.calculator.formatCurrency(quote.totals.monthly)}</div>
-                    <div class="text-sm text-gray-400">Monthly Cost</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-lg font-semibold text-blue-400">${this.calculator.formatCurrency(quote.totals.annual)}</div>
-                    <div class="text-sm text-gray-400">Annual Cost</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-lg font-semibold text-purple-400">${this.calculator.formatCurrency(quote.totals.threeYear)}</div>
-                    <div class="text-sm text-gray-400">3-Year Total</div>
-                </div>
-                ${quote.totals.oneTime > 0 ? `
-                <div class="text-center">
-                    <div class="text-lg font-semibold text-orange-400">${this.calculator.formatCurrency(quote.totals.oneTime)}</div>
-                    <div class="text-sm text-gray-400">One-time Costs</div>
-                </div>
-                ` : ''}
-                ${quote.discounts && (quote.discounts.monthlyDiscount > 0 || quote.discounts.annualDiscount > 0) ? `
-                <div class="bg-green-900 bg-opacity-50 rounded-lg p-3">
-                    <div class="text-center">
-                        <div class="text-sm font-semibold text-green-300">Volume Discounts Applied</div>
-                        <div class="text-xs text-green-400">Monthly: ${(quote.discounts.monthlyDiscount * 100).toFixed(1)}%</div>
-                    </div>
-                </div>
-                ` : ''}
-            </div>
-        `;
+        // Calculate hash to detect changes
+        const pricingHash = JSON.stringify({
+            monthly: quote.totals.monthly,
+            annual: quote.totals.annual,
+            threeYear: quote.totals.threeYear,
+            oneTime: quote.totals.oneTime,
+            discount: quote.discounts?.monthlyDiscount || 0
+        });
+
+        if (this.domCache.lastPricingHash === pricingHash) {
+            // No changes, skip re-render
+            return;
+        }
+        this.domCache.lastPricingHash = pricingHash;
+
+        // Check if structure exists, update only values if possible
+        const existingWrapper = pricingSummary.querySelector('.space-y-3');
+
+        if (existingWrapper && this.domCache.pricingElements) {
+            // Update existing elements (delta update)
+            this.domCache.pricingElements.monthly.textContent = this.calculator.formatCurrency(quote.totals.monthly);
+            this.domCache.pricingElements.annual.textContent = this.calculator.formatCurrency(quote.totals.annual);
+            this.domCache.pricingElements.threeYear.textContent = this.calculator.formatCurrency(quote.totals.threeYear);
+
+            // Handle optional one-time cost
+            if (quote.totals.oneTime > 0) {
+                if (!this.domCache.pricingElements.oneTimeContainer) {
+                    this.createOneTimeCostElement(existingWrapper, quote.totals.oneTime);
+                } else {
+                    this.domCache.pricingElements.oneTime.textContent = this.calculator.formatCurrency(quote.totals.oneTime);
+                }
+            } else if (this.domCache.pricingElements.oneTimeContainer) {
+                this.domCache.pricingElements.oneTimeContainer.remove();
+                this.domCache.pricingElements.oneTimeContainer = null;
+            }
+
+            // Handle optional discount
+            if (quote.discounts && (quote.discounts.monthlyDiscount > 0 || quote.discounts.annualDiscount > 0)) {
+                if (!this.domCache.pricingElements.discountContainer) {
+                    this.createDiscountElement(existingWrapper, quote.discounts.monthlyDiscount);
+                } else {
+                    this.domCache.pricingElements.discount.textContent = `Monthly: ${(quote.discounts.monthlyDiscount * 100).toFixed(1)}%`;
+                }
+            } else if (this.domCache.pricingElements.discountContainer) {
+                this.domCache.pricingElements.discountContainer.remove();
+                this.domCache.pricingElements.discountContainer = null;
+            }
+
+            return;
+        }
+
+        // Full rebuild if structure doesn't exist
+        this.buildPricingSummaryStructure(pricingSummary, quote);
+    }
+
+    buildPricingSummaryStructure(pricingSummary, quote) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'space-y-3';
+
+        // Cache elements for future delta updates
+        this.domCache.pricingElements = {};
+
+        // Monthly cost
+        const monthlyDiv = this.createPricingItem(
+            this.calculator.formatCurrency(quote.totals.monthly),
+            'Monthly Cost',
+            'text-2xl font-bold text-[var(--qolcom-green)]'
+        );
+        this.domCache.pricingElements.monthly = monthlyDiv.querySelector('div:first-child');
+        wrapper.appendChild(monthlyDiv);
+
+        // Annual cost
+        const annualDiv = this.createPricingItem(
+            this.calculator.formatCurrency(quote.totals.annual),
+            'Annual Cost',
+            'text-lg font-semibold text-blue-400'
+        );
+        this.domCache.pricingElements.annual = annualDiv.querySelector('div:first-child');
+        wrapper.appendChild(annualDiv);
+
+        // 3-Year cost
+        const threeYearDiv = this.createPricingItem(
+            this.calculator.formatCurrency(quote.totals.threeYear),
+            '3-Year Total',
+            'text-lg font-semibold text-purple-400'
+        );
+        this.domCache.pricingElements.threeYear = threeYearDiv.querySelector('div:first-child');
+        wrapper.appendChild(threeYearDiv);
+
+        // One-time cost (optional)
+        if (quote.totals.oneTime > 0) {
+            this.createOneTimeCostElement(wrapper, quote.totals.oneTime);
+        }
+
+        // Discount (optional)
+        if (quote.discounts && (quote.discounts.monthlyDiscount > 0 || quote.discounts.annualDiscount > 0)) {
+            this.createDiscountElement(wrapper, quote.discounts.monthlyDiscount);
+        }
+
+        pricingSummary.innerHTML = '';
+        pricingSummary.appendChild(wrapper);
+    }
+
+    createPricingItem(value, label, valueClass) {
+        const container = document.createElement('div');
+        container.className = 'text-center';
+
+        const valueDiv = document.createElement('div');
+        valueDiv.className = valueClass;
+        valueDiv.textContent = value;
+
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'text-sm text-gray-400';
+        labelDiv.textContent = label;
+
+        container.appendChild(valueDiv);
+        container.appendChild(labelDiv);
+
+        return container;
+    }
+
+    createOneTimeCostElement(wrapper, oneTime) {
+        const oneTimeDiv = this.createPricingItem(
+            this.calculator.formatCurrency(oneTime),
+            'One-time Costs',
+            'text-lg font-semibold text-orange-400'
+        );
+        this.domCache.pricingElements.oneTimeContainer = oneTimeDiv;
+        this.domCache.pricingElements.oneTime = oneTimeDiv.querySelector('div:first-child');
+        wrapper.appendChild(oneTimeDiv);
+    }
+
+    createDiscountElement(wrapper, monthlyDiscount) {
+        const discountDiv = document.createElement('div');
+        discountDiv.className = 'bg-green-900 bg-opacity-50 rounded-lg p-3';
+
+        const centerDiv = document.createElement('div');
+        centerDiv.className = 'text-center';
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'text-sm font-semibold text-green-300';
+        titleDiv.textContent = 'Volume Discounts Applied';
+
+        const percentDiv = document.createElement('div');
+        percentDiv.className = 'text-xs text-green-400';
+        percentDiv.textContent = `Monthly: ${(monthlyDiscount * 100).toFixed(1)}%`;
+
+        centerDiv.appendChild(titleDiv);
+        centerDiv.appendChild(percentDiv);
+        discountDiv.appendChild(centerDiv);
+
+        this.domCache.pricingElements.discountContainer = discountDiv;
+        this.domCache.pricingElements.discount = percentDiv;
+        wrapper.appendChild(discountDiv);
     }
 
     // Load component data from localStorage

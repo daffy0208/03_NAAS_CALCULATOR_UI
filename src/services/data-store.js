@@ -214,16 +214,16 @@ class QuoteDataStore {
 
         // String fields with sanitization
         if (projectData.projectName !== undefined) {
-            validated.projectName = this.sanitizeString(projectData.projectName, 100);
+            validated.projectName = this.sanitizeString(projectData.projectName, AppConfig.MAX_STRING_LENGTH_SHORT);
         }
         if (projectData.customerName !== undefined) {
-            validated.customerName = this.sanitizeString(projectData.customerName, 100);
+            validated.customerName = this.sanitizeString(projectData.customerName, AppConfig.MAX_STRING_LENGTH_SHORT);
         }
         if (projectData.primaryLocation !== undefined) {
-            validated.primaryLocation = this.sanitizeString(projectData.primaryLocation, 100);
+            validated.primaryLocation = this.sanitizeString(projectData.primaryLocation, AppConfig.MAX_STRING_LENGTH_SHORT);
         }
         if (projectData.budget !== undefined) {
-            validated.budget = this.sanitizeString(projectData.budget, 50);
+            validated.budget = this.sanitizeString(projectData.budget, AppConfig.MAX_STRING_LENGTH_MEDIUM);
         }
 
         // Enum validation
@@ -241,10 +241,10 @@ class QuoteDataStore {
 
         // Numeric validation
         if (projectData.sites !== undefined) {
-            validated.sites = this.validatePositiveInteger(projectData.sites, 1, 1000) || 1;
+            validated.sites = this.validatePositiveInteger(projectData.sites, AppConfig.MIN_SITES, AppConfig.MAX_SITES) || AppConfig.MIN_SITES;
         }
         if (projectData.totalUsers !== undefined) {
-            validated.totalUsers = this.validatePositiveInteger(projectData.totalUsers, 1, 100000) || 100;
+            validated.totalUsers = this.validatePositiveInteger(projectData.totalUsers, AppConfig.MIN_USERS, AppConfig.MAX_USERS) || AppConfig.DEFAULT_USER_COUNT;
         }
 
         return validated;
@@ -416,7 +416,7 @@ class QuoteDataStore {
     }
 
     // Validation utility methods
-    sanitizeString(value, maxLength = 255) {
+    sanitizeString(value, maxLength = AppConfig.MAX_STRING_LENGTH) {
         if (value === null || value === undefined) return '';
         const str = String(value).trim();
         // Basic XSS prevention - remove script tags and similar
@@ -434,14 +434,14 @@ class QuoteDataStore {
         return num;
     }
 
-    sanitizeObject(obj, maxDepth = 3) {
+    sanitizeObject(obj, maxDepth = AppConfig.MAX_OBJECT_DEPTH) {
         if (maxDepth <= 0 || obj === null || typeof obj !== 'object') {
             return {};
         }
 
         const sanitized = {};
         for (const [key, value] of Object.entries(obj)) {
-            if (key.length > 100) continue; // Skip overly long keys
+            if (key.length > AppConfig.MAX_KEY_LENGTH) continue; // Skip overly long keys
 
             if (typeof value === 'string') {
                 sanitized[key] = this.sanitizeString(value);
@@ -449,8 +449,8 @@ class QuoteDataStore {
                 sanitized[key] = value;
             } else if (typeof value === 'boolean') {
                 sanitized[key] = value;
-            } else if (Array.isArray(value) && value.length < 100) {
-                sanitized[key] = value.slice(0, 50); // Limit array size
+            } else if (Array.isArray(value) && value.length < AppConfig.MAX_ARRAY_SIZE) {
+                sanitized[key] = value.slice(0, AppConfig.MAX_ARRAY_SIZE_SHORT); // Limit array size
             } else if (typeof value === 'object') {
                 sanitized[key] = this.sanitizeObject(value, maxDepth - 1);
             }
@@ -689,7 +689,7 @@ class QuoteDataStore {
                 key: key,
                 data: data,
                 timestamp: Date.now(),
-                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                expiresAt: Date.now() + AppConfig.TEMP_DATA_EXPIRY_MS
             };
 
             if (this.storageManager) {

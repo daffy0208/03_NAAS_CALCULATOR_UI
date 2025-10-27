@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP Test Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #00a651;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #00a651;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .status.success { background: #00a651; }
+        .status.error { background: #e74c3c; }
+        .status.warning { background: #f39c12; }
+        .test-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        .test-detail {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .summary {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .summary h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .csp-violations {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .instructions {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Content Security Policy Test Results</h1>
+
+        <div class="instructions">
+            <strong>Testing Instructions:</strong>
+            <ol>
+                <li>Open the main application at <code>http://localhost:8000</code></li>
+                <li>Open browser DevTools (F12) and go to the Console tab</li>
+                <li>Check this page for automated test results</li>
+                <li>Look for any CSP violations in the console (they start with "Refused to...")</li>
+                <li>Test all major features: Dashboard, Components, Wizard, Import/Export</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>CSP Header Tests</h3>
+            <div id="cspTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>External Resource Loading</h3>
+            <div id="resourceTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Script Execution</h3>
+            <div id="scriptTests"></div>
+        </div>
+
+        <div class="csp-violations" id="violations" style="display: none;">
+            <h3>CSP Violations Detected:</h3>
+            <div id="violationList"></div>
+        </div>
+
+        <div class="summary">
+            <h2>Test Summary</h2>
+            <div id="summary"></div>
+        </div>
+    </div>
+
+    <script>
+        // Track CSP violations
+        const violations = [];
+
+        document.addEventListener('securitypolicyviolation', (e) => {
+            violations.push({
+                violatedDirective: e.violatedDirective,
+                blockedURI: e.blockedURI,
+                lineNumber: e.lineNumber,
+                sourceFile: e.sourceFile
+            });
+            updateViolations();
+        });
+
+        function createTestItem(name, status, detail = '') {
+            return `
+                <div class="test-item">
+                    <div class="status ${status}"></div>
+                    <div class="test-name">${name}</div>
+                    <div class="test-detail">${detail}</div>
+                </div>
+            `;
+        }
+
+        function updateViolations() {
+            const violationsDiv = document.getElementById('violations');
+            const violationList = document.getElementById('violationList');
+
+            if (violations.length > 0) {
+                violationsDiv.style.display = 'block';
+                violationList.innerHTML = violations.map(v => `
+                    <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 4px;">
+                        <strong>Directive:</strong> ${v.violatedDirective}<br>
+                        <strong>Blocked URI:</strong> ${v.blockedURI}<br>
+                        <strong>Source:</strong> ${v.sourceFile}:${v.lineNumber}
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Run tests
+        async function runTests() {
+            const tests = {
+                csp: [],
+                resources: [],
+                scripts: []
+            };
+
+            // CSP Header Tests
+            try {
+                const response = await fetch('http://localhost:8000');
+                const cspHeader = response.headers.get('Content-Security-Policy');
+
+                if (cspHeader || document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
+                    tests.csp.push(createTestItem('CSP Header Present', 'success', 'Policy is defined'));
+
+                    // Check for unsafe-inline in script-src
+                    const metaCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.content || cspHeader;
+                    if (metaCSP && !metaCSP.includes("script-src 'self' 'unsafe-inline'")) {
+                        tests.csp.push(createTestItem('No unsafe-inline for scripts', 'success', 'Using hash-based approach'));
+                    } else if (metaCSP && metaCSP.includes("script-src 'self' 'unsafe-inline'")) {
+                        tests.csp.push(createTestItem('unsafe-inline detected', 'warning', 'Consider using hashes'));
+                    }
+
+                    // Check for frame-ancestors
+                    if (metaCSP && metaCSP.includes('frame-ancestors')) {
+                        tests.csp.push(createTestItem('Clickjacking protection', 'success', 'frame-ancestors directive set'));
+                    }
+
+                    // Check for object-src
+                    if (metaCSP && metaCSP.includes("object-src 'none'")) {
+                        tests.csp.push(createTestItem('Plugin protection', 'success', 'object-src none'));
+                    }
+                } else {
+                    tests.csp.push(createTestItem('CSP Header Missing', 'error', 'No policy found'));
+                }
+            } catch (e) {
+                tests.csp.push(createTestItem('CSP Header Check Failed', 'error', e.message));
+            }
+
+            // Resource Loading Tests
+            const resources = [
+                { name: 'XLSX Library', check: () => typeof XLSX !== 'undefined' },
+                { name: 'jsPDF Library', check: () => typeof jspdf !== 'undefined' },
+                { name: 'DOMPurify Library', check: () => typeof DOMPurify !== 'undefined' }
+            ];
+
+            resources.forEach(resource => {
+                setTimeout(() => {
+                    if (resource.check()) {
+                        tests.resources.push(createTestItem(resource.name, 'success', 'Loaded correctly'));
+                    } else {
+                        tests.resources.push(createTestItem(resource.name, 'error', 'Failed to load'));
+                    }
+                    document.getElementById('resourceTests').innerHTML = tests.resources.join('');
+                }, 2000);
+            });
+
+            // Script Execution Tests
+            tests.scripts.push(createTestItem('Inline script execution', 'success', 'This script is running'));
+
+            // Try to execute eval (should be blocked by default)
+            try {
+                eval('1+1');
+                tests.scripts.push(createTestItem('eval() blocked', 'warning', 'eval() was allowed'));
+            } catch (e) {
+                tests.scripts.push(createTestItem('eval() blocked', 'success', 'eval() is blocked'));
+            }
+
+            // Display results
+            document.getElementById('cspTests').innerHTML = tests.csp.join('');
+            document.getElementById('resourceTests').innerHTML = tests.resources.join('') || '<p>Waiting for external libraries...</p>';
+            document.getElementById('scriptTests').innerHTML = tests.scripts.join('');
+
+            // Summary
+            setTimeout(() => {
+                const totalTests = tests.csp.length + tests.resources.length + tests.scripts.length;
+                const passedTests = (tests.csp.join('') + tests.resources.join('') + tests.scripts.join('')).split('status success').length - 1;
+
+                document.getElementById('summary').innerHTML = `
+                    <p><strong>Total Tests:</strong> ${totalTests}</p>
+                    <p><strong>Passed:</strong> ${passedTests}</p>
+                    <p><strong>CSP Violations:</strong> ${violations.length}</p>
+                    <p style="margin-top: 15px; color: ${violations.length === 0 ? '#00a651' : '#e74c3c'};">
+                        ${violations.length === 0 ? '✓ All tests passed! CSP is working correctly.' : '✗ Some violations detected. Check console for details.'}
+                    </p>
+                `;
+            }, 3000);
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

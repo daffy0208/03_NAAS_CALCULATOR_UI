@@ -3,6 +3,9 @@
  * Handles Excel/CSV import and export functionality
  */
 
+// Import DOMPurify from global scope (loaded via CDN in index.html)
+const DOMPurify = window.DOMPurify;
+
 class ImportExportManager {
     constructor(calculator) {
         this.calculator = calculator;
@@ -911,14 +914,21 @@ class ImportExportManager {
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-600 text-white' : 
-            type === 'error' ? 'bg-red-600 text-white' : 
+            type === 'success' ? 'bg-green-600 text-white' :
+            type === 'error' ? 'bg-red-600 text-white' :
             'bg-blue-600 text-white'
         }`;
+
+        // Sanitize message before inserting into DOM to prevent XSS attacks
+        const sanitizedMessage = DOMPurify ? DOMPurify.sanitize(message, {
+            ALLOWED_TAGS: [],  // Strip all HTML tags
+            KEEP_CONTENT: true  // Keep text content
+        }) : String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
         notification.innerHTML = `
             <div class="flex items-center">
                 <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
-                ${message}
+                ${sanitizedMessage}
             </div>
         `;
 

@@ -5,11 +5,11 @@
 
 class StorageManager {
     constructor() {
-        this.dbName = 'NaaSCalculatorDB';
-        this.dbVersion = 2;
+        this.dbName = AppConfig.INDEXEDDB_NAME;
+        this.dbVersion = AppConfig.INDEXEDDB_VERSION;
         this.db = null;
         this.isIndexedDBSupported = this.checkIndexedDBSupport();
-        this.maxLocalStorageEntries = 10; // Fallback limit for localStorage
+        this.maxLocalStorageEntries = AppConfig.MAX_LOCALSTORAGE_ENTRIES;
 
         // Store names
         this.stores = {
@@ -22,7 +22,7 @@ class StorageManager {
         // Concurrency control
         this.operationQueue = [];
         this.isProcessingQueue = false;
-        this.maxConcurrentOperations = 3;
+        this.maxConcurrentOperations = AppConfig.MAX_CONCURRENT_STORAGE_OPERATIONS;
         this.activeOperations = new Set();
 
         // Error tracking
@@ -32,7 +32,7 @@ class StorageManager {
         // Connection state
         this.connectionState = 'disconnected';
         this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 3;
+        this.maxReconnectAttempts = AppConfig.MAX_STORAGE_RECONNECT_ATTEMPTS;
     }
 
     /**
@@ -136,7 +136,7 @@ class StorageManager {
             }
 
             // Wait before attempting reconnection
-            await new Promise(resolve => setTimeout(resolve, 1000 * this.reconnectAttempts));
+            await new Promise(resolve => setTimeout(resolve, AppConfig.STORAGE_RECONNECTION_DELAY_MS * this.reconnectAttempts));
 
             // Reinitialize
             const success = await this.initIndexedDB();
@@ -210,7 +210,7 @@ class StorageManager {
                     // Attempt automatic reconnection
                     setTimeout(() => {
                         this.attemptReconnection();
-                    }, 1000);
+                    }, AppConfig.STORAGE_RECONNECTION_DELAY_MS);
                 };
 
                 // Handle blocked connections
@@ -404,7 +404,7 @@ class StorageManager {
      * Get quotes with optional filtering
      */
     async getQuotes(options = {}) {
-        const { limit = 50, customerName, projectName, startDate, endDate } = options;
+        const { limit = AppConfig.STORAGE_CLEANUP_QUOTES_KEEP, customerName, projectName, startDate, endDate } = options;
 
         if (this.isIndexedDBSupported && this.db) {
             return this.getQuotesFromIndexedDB({ limit, customerName, projectName, startDate, endDate });
@@ -417,7 +417,7 @@ class StorageManager {
      * Get components with optional filtering
      */
     async getComponents(options = {}) {
-        const { limit = 100, componentType, startDate, endDate } = options;
+        const { limit = AppConfig.STORAGE_CLEANUP_COMPONENTS_KEEP, componentType, startDate, endDate } = options;
 
         if (this.isIndexedDBSupported && this.db) {
             return this.getComponentsFromIndexedDB({ limit, componentType, startDate, endDate });
@@ -444,9 +444,9 @@ class StorageManager {
      */
     async cleanup(options = {}) {
         const {
-            quotesKeepDays = 90,
-            componentsKeepDays = 30,
-            historyKeepDays = 14
+            quotesKeepDays = AppConfig.STORAGE_CLEANUP_QUOTES_DAYS,
+            componentsKeepDays = AppConfig.STORAGE_CLEANUP_COMPONENTS_DAYS,
+            historyKeepDays = AppConfig.STORAGE_CLEANUP_HISTORY_DAYS
         } = options;
 
         const cutoffDates = {
@@ -857,7 +857,7 @@ class StorageManager {
                 console.log('StorageManager: Database closed');
             } else {
                 // Wait a bit more
-                setTimeout(waitForOperations, 100);
+                setTimeout(waitForOperations, AppConfig.INIT_POLLING_INTERVAL_MS);
             }
         };
 
@@ -907,16 +907,16 @@ class StorageManager {
         try {
             // Clean up each store based on priority (oldest first)
             const cleanupStrategies = [
-                { store: 'history', keepLatest: 50 },      // Keep last 50 history entries
-                { store: 'quotes', keepLatest: 20 },       // Keep last 20 saved quotes
-                { store: 'components', keepLatest: 100 },   // Keep last 100 component configs
+                { store: 'history', keepLatest: AppConfig.STORAGE_CLEANUP_HISTORY_KEEP },
+                { store: 'quotes', keepLatest: AppConfig.STORAGE_CLEANUP_QUOTES_KEEP },
+                { store: 'components', keepLatest: AppConfig.STORAGE_CLEANUP_COMPONENTS_KEEP },
             ];
 
             for (const strategy of cleanupStrategies) {
                 if (strategy.store === targetStore || totalRemoved < 10) {
                     // Be more aggressive with the target store or if we haven't freed enough space
                     const keepCount = strategy.store === targetStore ?
-                        Math.floor(strategy.keepLatest * 0.5) : strategy.keepLatest;
+                        Math.floor(strategy.keepLatest * AppConfig.STORAGE_CLEANUP_AGGRESSIVE_FACTOR) : strategy.keepLatest;
 
                     const removed = await this.cleanupOldEntries(strategy.store, keepCount);
                     totalRemoved += removed;
@@ -1031,7 +1031,7 @@ class StorageManager {
             const dataToStore = JSON.stringify(data);
 
             // Check if we can store in localStorage
-            if (dataToStore.length > 5 * 1024 * 1024) { // 5MB limit
+            if (dataToStore.length > AppConfig.LOCALSTORAGE_FALLBACK_MAX_SIZE) {
                 throw new Error('Data too large for localStorage fallback');
             }
 
@@ -1068,7 +1068,7 @@ class StorageManager {
                 }
             }
 
-            // Sort by timestamp (newest first) and keep only the latest 5
+            // Sort by timestamp (newest first) and keep only the latest entries
             fallbackKeys.sort((a, b) => {
                 const timestampA = parseInt(a.split('_').pop());
                 const timestampB = parseInt(b.split('_').pop());
@@ -1076,12 +1076,12 @@ class StorageManager {
             });
 
             // Remove old fallback entries
-            fallbackKeys.slice(5).forEach(key => {
+            fallbackKeys.slice(AppConfig.LOCALSTORAGE_FALLBACK_KEEP_COUNT).forEach(key => {
                 localStorage.removeItem(key);
             });
 
-            if (fallbackKeys.length > 5) {
-                console.log(`Cleaned up ${fallbackKeys.length - 5} old localStorage fallback entries`);
+            if (fallbackKeys.length > AppConfig.LOCALSTORAGE_FALLBACK_KEEP_COUNT) {
+                console.log(`Cleaned up ${fallbackKeys.length - AppConfig.LOCALSTORAGE_FALLBACK_KEEP_COUNT} old localStorage fallback entries`);
             }
 
         } catch (error) {

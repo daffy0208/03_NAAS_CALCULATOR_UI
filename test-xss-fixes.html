@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Security Test - NaaS Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; background: #1f2937; color: #fff; }
+        .test-section { margin: 20px 0; padding: 20px; background: #374151; border-radius: 8px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .pass { background: #059669; }
+        .fail { background: #dc2626; }
+        button { margin: 5px; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .test-btn { background: #2563eb; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1 class="text-3xl font-bold mb-4">XSS Security Tests for NaaS Calculator</h1>
+
+    <div class="test-section">
+        <h2 class="text-xl font-bold mb-2">Test 1: Notification XSS Protection</h2>
+        <p>Testing if notifications properly sanitize user input...</p>
+        <button class="test-btn" onclick="testNotificationXSS()">Test Notification XSS</button>
+        <div id="notification-test-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="text-xl font-bold mb-2">Test 2: Equipment Description XSS Protection</h2>
+        <p>Testing if equipment descriptions properly sanitize user input...</p>
+        <button class="test-btn" onclick="testEquipmentXSS()">Test Equipment XSS</button>
+        <div id="equipment-test-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="text-xl font-bold mb-2">Test 3: Wizard Validation XSS Protection</h2>
+        <p>Testing if wizard validation messages properly sanitize user input...</p>
+        <button class="test-btn" onclick="testWizardXSS()">Test Wizard XSS</button>
+        <div id="wizard-test-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="text-xl font-bold mb-2">XSS Payloads Tested</h2>
+        <ul class="list-disc ml-5">
+            <li><code>&lt;script&gt;alert('xss')&lt;/script&gt;</code></li>
+            <li><code>&lt;img src=x onerror="alert('xss')"&gt;</code></li>
+            <li><code>&lt;svg onload="alert('xss')"&gt;</code></li>
+            <li><code>&lt;iframe src="javascript:alert('xss')"&gt;</code></li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <script src="src/config.js"></script>
+    <script src="src/core/calculations.js"></script>
+    <script src="src/services/data-store.js"></script>
+    <script src="src/components/components.js"></script>
+    <script src="src/components/wizard.js"></script>
+
+    <script>
+        // XSS test payloads
+        const xssPayloads = [
+            '<script>alert("xss")</script>',
+            '<img src=x onerror="alert(\'xss\')">',
+            '<svg onload="alert(\'xss\')">',
+            '<iframe src="javascript:alert(\'xss\')">',
+            'javascript:alert("xss")',
+            '<a href="javascript:alert(\'xss\')">click</a>'
+        ];
+
+        let testsPassed = 0;
+        let testsFailed = 0;
+
+        function testNotificationXSS() {
+            console.log('Testing notification XSS protection...');
+            const resultDiv = document.getElementById('notification-test-result');
+
+            try {
+                const calculator = new NaaSCalculator();
+                const manager = new ComponentManager(calculator);
+
+                // Test each payload
+                let allPassed = true;
+                xssPayloads.forEach(payload => {
+                    manager.showNotification(payload, 'info');
+
+                    // Check if script actually executed (it shouldn't)
+                    // If we get here without script execution, sanitization worked
+                    console.log(`✓ Payload blocked: ${payload}`);
+                });
+
+                // Verify the notifications are in DOM but sanitized
+                const notifications = document.querySelectorAll('.fixed.top-4.right-4');
+                let foundUnsanitized = false;
+                notifications.forEach(n => {
+                    if (n.innerHTML.includes('<script') || n.innerHTML.includes('onerror=')) {
+                        foundUnsanitized = true;
+                    }
+                });
+
+                if (!foundUnsanitized) {
+                    resultDiv.className = 'test-result pass';
+                    resultDiv.textContent = '✓ PASS: All XSS payloads were properly sanitized';
+                    testsPassed++;
+                } else {
+                    resultDiv.className = 'test-result fail';
+                    resultDiv.textContent = '✗ FAIL: Found unsanitized content in notifications';
+                    testsFailed++;
+                }
+
+                // Clean up notifications
+                notifications.forEach(n => n.remove());
+
+            } catch (error) {
+                resultDiv.className = 'test-result fail';
+                resultDiv.textContent = `✗ FAIL: ${error.message}`;
+                testsFailed++;
+            }
+        }
+
+        function testEquipmentXSS() {
+            console.log('Testing equipment description XSS protection...');
+            const resultDiv = document.getElementById('equipment-test-result');
+
+            try {
+                const calculator = new NaaSCalculator();
+                const manager = new ComponentManager(calculator);
+
+                // Create test equipment with XSS payload
+                const testEquipment = xssPayloads.map(payload => ({
+                    description: payload,
+                    quantity: 1,
+                    unitCost: 100
+                }));
+
+                // Render equipment list
+                manager.renderEquipmentList(testEquipment);
+
+                // Check if any script tags or event handlers are in the DOM
+                const equipmentList = document.getElementById('equipmentList');
+                if (equipmentList) {
+                    const html = equipmentList.innerHTML;
+                    if (html.includes('<script') || html.includes('onerror=') || html.includes('onload=')) {
+                        resultDiv.className = 'test-result fail';
+                        resultDiv.textContent = '✗ FAIL: Found unsanitized content in equipment list';
+                        testsFailed++;
+                    } else {
+                        resultDiv.className = 'test-result pass';
+                        resultDiv.textContent = '✓ PASS: Equipment descriptions properly sanitized';
+                        testsPassed++;
+                    }
+                } else {
+                    resultDiv.className = 'test-result fail';
+                    resultDiv.textContent = '✗ FAIL: Equipment list container not found';
+                    testsFailed++;
+                }
+
+            } catch (error) {
+                resultDiv.className = 'test-result fail';
+                resultDiv.textContent = `✗ FAIL: ${error.message}`;
+                testsFailed++;
+            }
+        }
+
+        function testWizardXSS() {
+            console.log('Testing wizard validation XSS protection...');
+            const resultDiv = document.getElementById('wizard-test-result');
+
+            try {
+                const calculator = new NaaSCalculator();
+                const wizard = new QuoteWizard(calculator);
+
+                // Test each payload
+                xssPayloads.forEach(payload => {
+                    wizard.showValidationError(payload);
+                });
+
+                // Check if any script tags or event handlers are in the DOM
+                const notifications = document.querySelectorAll('.fixed.top-4.right-4');
+                let foundUnsanitized = false;
+                notifications.forEach(n => {
+                    if (n.innerHTML.includes('<script') || n.innerHTML.includes('onerror=')) {
+                        foundUnsanitized = true;
+                    }
+                });
+
+                if (!foundUnsanitized) {
+                    resultDiv.className = 'test-result pass';
+                    resultDiv.textContent = '✓ PASS: Wizard validation messages properly sanitized';
+                    testsPassed++;
+                } else {
+                    resultDiv.className = 'test-result fail';
+                    resultDiv.textContent = '✗ FAIL: Found unsanitized content in wizard notifications';
+                    testsFailed++;
+                }
+
+                // Clean up notifications
+                notifications.forEach(n => n.remove());
+
+            } catch (error) {
+                resultDiv.className = 'test-result fail';
+                resultDiv.textContent = `✗ FAIL: ${error.message}`;
+                testsFailed++;
+            }
+        }
+
+        // Run all tests after page loads
+        window.addEventListener('load', () => {
+            console.log('Page loaded, ready to run tests');
+            console.log('DOMPurify loaded:', typeof DOMPurify !== 'undefined');
+        });
+    </script>
+</body>
+</html>

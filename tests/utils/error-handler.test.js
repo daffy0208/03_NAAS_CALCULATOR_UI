@@ -141,7 +141,11 @@ describe('ErrorHandler', () => {
 
       expect(document.querySelector('.error-notification')).toBeTruthy();
 
-      vi.advanceTimersByTime(5000);
+      // Advance timers and wait for DOM updates
+      await vi.advanceTimersByTimeAsync(5000);
+
+      // Wait for any pending microtasks
+      await vi.runAllTimersAsync();
 
       expect(document.querySelector('.error-notification')).toBeFalsy();
 

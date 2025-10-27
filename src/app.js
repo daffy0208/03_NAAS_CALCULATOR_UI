@@ -3,6 +3,9 @@
  * Orchestrates all components and manages application state
  */
 
+// Import DOMPurify from global scope (loaded via CDN in index.html)
+const DOMPurify = window.DOMPurify;
+
 class NaaSApp {
     constructor() {
         this.currentView = 'dashboard';
@@ -11,6 +14,10 @@ class NaaSApp {
         this.quoteWizard = null;
         this.importExportManager = null;
         this.liveUpdates = true;
+
+        // Managers
+        this.viewManager = null;
+        this.autoSaveManager = null;
 
         // Race condition prevention
         this.isInitializing = false;
@@ -125,11 +132,11 @@ class NaaSApp {
 
         // Wait for data store to be available with polling
         let attempts = 0;
-        while (!window.quoteDataStore && attempts < 50) {
-            if (attempts % 10 === 0) {
-                this.updateLoadingIndicator(`Initializing data store... (${Math.floor(attempts/10 + 1)}/5)`);
+        while (!window.quoteDataStore && attempts < AppConfig.MAX_INIT_ATTEMPTS) {
+            if (attempts % AppConfig.INIT_POLLING_LOG_FREQUENCY === 0) {
+                this.updateLoadingIndicator(`Initializing data store... (${Math.floor(attempts/AppConfig.INIT_POLLING_LOG_FREQUENCY + 1)}/5)`);
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, AppConfig.INIT_POLLING_INTERVAL_MS));
             attempts++;
         }
 
@@ -177,7 +184,31 @@ class NaaSApp {
             this.showError('Failed to initialize import/export manager');
             // Continue without import/export functionality
         }
-        
+
+        // Initialize ViewManager
+        this.updateLoadingIndicator('Initializing view manager...');
+        try {
+            this.viewManager = new ViewManager(this);
+            this.viewManager.initialize();
+            console.log('ViewManager initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize ViewManager:', error);
+            this.showError('Failed to initialize view manager');
+            // Continue with fallback view management
+        }
+
+        // Initialize AutoSaveManager
+        this.updateLoadingIndicator('Setting up auto-save...');
+        try {
+            this.autoSaveManager = new AutoSaveManager(this);
+            this.autoSaveManager.initialize();
+            console.log('AutoSaveManager initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize AutoSaveManager:', error);
+            this.showNotification('Auto-save disabled due to initialization error', 'warning');
+            // Continue without auto-save functionality
+        }
+
         // Set up data store event listeners for synchronization
         try {
             this.setupDataStoreListeners();
@@ -185,26 +216,6 @@ class NaaSApp {
         } catch (error) {
             console.error('Failed to set up data store listeners:', error);
             this.showError('Failed to set up data synchronization');
-        }
-
-        // Bind navigation events
-        try {
-            this.bindNavigationEvents();
-            console.log('Navigation events bound successfully');
-        } catch (error) {
-            console.error('Failed to bind navigation events:', error);
-            this.showError('Failed to set up navigation');
-        }
-
-        // Initialize views
-        this.updateLoadingIndicator('Setting up user interface...');
-        try {
-            this.initializeViews();
-            console.log('Views initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize views:', error);
-            this.hideLoadingIndicator();
-            this.showError('Failed to initialize application views');
         }
 
         // Load saved data
@@ -252,12 +263,10 @@ class NaaSApp {
         
         console.log('NaaS Pricing Calculator initialized successfully');
 
-        // Initialize enhanced auto-save system
-        this.updateLoadingIndicator('Setting up auto-save...');
-        this.initializeAutoSave();
-
-        // Restore any auto-saved data
-        await this.restoreAutoSavedData();
+        // Restore any auto-saved data (if AutoSaveManager is available)
+        if (this.autoSaveManager) {
+            await this.autoSaveManager.restoreAutoSavedData();
+        }
 
         // Hide loading indicator
         this.hideLoadingIndicator();
@@ -307,12 +316,89 @@ class NaaSApp {
         // Could reset UI elements, show welcome message, etc.
     }
 
+    /**
+     * Helper method to add event listener and track it for cleanup
+     * @param {Element} element - DOM element
+     * @param {string} event - Event name
+     * @param {Function} listener - Event listener function
+     * @param {Object} options - Event options
+     * @returns {Function} Listener function (for reference if needed)
+     */
+    addManagedEventListener(element, event, listener, options = {}) {
+        if (!element) {
+            console.warn(`Cannot add event listener to null element for event: ${event}`);
+            return null;
+        }
+
+        element.addEventListener(event, listener, options);
+
+        // Track listener for cleanup (unless using { once: true })
+        if (!options.once) {
+            this.eventListeners.add({ element, event, listener, options });
+        }
+
+        return listener;
+    }
+
+    /**
+     * View management wrapper methods - delegate to ViewManager when available
+     */
+    showView(viewName) {
+        if (this.viewManager) {
+            this.viewManager.showView(viewName);
+            // Update currentView to stay in sync
+            this.currentView = this.viewManager.getCurrentView();
+        } else {
+            console.warn('ViewManager not available, cannot show view:', viewName);
+        }
+    }
+
+    initializeViews() {
+        if (this.viewManager) {
+            this.viewManager.initializeViews();
+        }
+    }
+
+    toggleMobileMenu() {
+        if (this.viewManager) {
+            this.viewManager.toggleMobileMenu();
+        }
+    }
+
+    hideMobileMenu() {
+        if (this.viewManager) {
+            this.viewManager.hideMobileMenu();
+        }
+    }
+
+    /**
+     * Auto-save wrapper methods - delegate to AutoSaveManager when available
+     */
+    markForAutoSave(type) {
+        if (this.autoSaveManager) {
+            this.autoSaveManager.markForAutoSave(type);
+        }
+    }
+
+    async performAutoSave() {
+        if (this.autoSaveManager) {
+            await this.autoSaveManager.performAutoSave();
+        }
+    }
+
+    async performImmediateAutoSave() {
+        if (this.autoSaveManager) {
+            await this.autoSaveManager.performImmediateAutoSave();
+        }
+    }
+
     bindNavigationEvents() {
         // Navigation buttons with keyboard support
-        document.getElementById('dashboardBtn')?.addEventListener('click', () => {
+        const dashboardBtn = document.getElementById('dashboardBtn');
+        this.addManagedEventListener(dashboardBtn, 'click', () => {
             this.showView('dashboard');
         });
-        document.getElementById('dashboardBtn')?.addEventListener('keydown', (e) => {
+        this.addManagedEventListener(dashboardBtn, 'keydown', (e) => {
             this.handleTabNavigation(e, 'dashboard');
         });
 
@@ -415,7 +501,7 @@ class NaaSApp {
         });
 
         // Global keyboard navigation
-        document.addEventListener('keydown', (e) => {
+        this.addManagedEventListener(document, 'keydown', (e) => {
             // Live pricing toggle
             if (e.ctrlKey && e.shiftKey && e.key === 'L') {
                 this.toggleLiveUpdates();
@@ -539,7 +625,7 @@ class NaaSApp {
                     `Switched to ${viewNames[viewName] || viewName}. ${this.getViewDescription(viewName)}`,
                     'polite'
                 );
-            }, 100);
+            }, AppConfig.VIEW_TRANSITION_DELAY_MS);
 
             // Update navigation state with error handling and ARIA
             try {
@@ -690,7 +776,7 @@ class NaaSApp {
                     if (firstMenuItem) {
                         firstMenuItem.focus();
                     }
-                }, 100);
+                }, AppConfig.VIEW_TRANSITION_DELAY_MS);
 
                 // Add keyboard navigation for mobile menu
                 this.bindMobileMenuKeyboard(mobileMenu);
@@ -1047,7 +1133,7 @@ class NaaSApp {
                                 console.error('Error selecting component:', error);
                                 this.showError(`Failed to select component "${componentType}": ${error.message}`);
                             }
-                        }, 50); // Reduced timeout for better responsiveness
+                        }, AppConfig.COMPONENT_SELECT_DELAY_MS);
                     } catch (error) {
                         console.error('Error handling component card click:', error);
                         this.showError(`Failed to open component: ${error.message}`);
@@ -1208,7 +1294,7 @@ class NaaSApp {
                     this.componentManager.componentData[quote.type] = quote.params;
                     this.componentManager.populateForm(quote.type);
                     this.componentManager.calculateComponent(quote.type);
-                }, 100);
+                }, AppConfig.VIEW_TRANSITION_DELAY_MS);
             }
         } else if (type === 'full') {
             const savedQuotes = JSON.parse(localStorage.getItem('naas_full_quotes') || '{}');
@@ -1219,7 +1305,7 @@ class NaaSApp {
                 setTimeout(() => {
                     this.quoteWizard.wizardData = quote.data;
                     this.quoteWizard.initializeWizard();
-                }, 100);
+                }, AppConfig.VIEW_TRANSITION_DELAY_MS);
             }
         }
     }
@@ -1388,28 +1474,28 @@ class NaaSApp {
     startLiveUpdates() {
         if (!this.liveUpdates) return;
 
-        // Update dashboard prices every 30 seconds (in case of external data changes)
+        // Update dashboard prices periodically (in case of external data changes)
         setInterval(() => {
             if (this.currentView === 'dashboard') {
                 this.updateDashboardPricing();
             }
-        }, 30000);
+        }, AppConfig.DASHBOARD_UPDATE_INTERVAL_MS);
 
-        // Auto-save wizard data every 10 seconds
+        // Auto-save wizard data periodically
         setInterval(() => {
             if (this.currentView === 'wizard' && this.quoteWizard && this.quoteWizard.wizardData) {
-                const hasData = Object.keys(this.quoteWizard.wizardData).some(key => 
+                const hasData = Object.keys(this.quoteWizard.wizardData).some(key =>
                     key !== 'project' && this.quoteWizard.wizardData[key].enabled
                 );
-                
+
                 if (hasData) {
                     localStorage.setItem('naas_full_quote', JSON.stringify(this.quoteWizard.wizardData));
                 }
             }
-        }, 10000);
+        }, AppConfig.WIZARD_AUTOSAVE_INTERVAL_MS);
 
         // Auto-save component data when changed
-        document.addEventListener('input', (e) => {
+        this.addManagedEventListener(document, 'input', (e) => {
             if (this.currentView === 'components' && e.target.closest('#componentConfigArea')) {
                 // Debounced save
                 clearTimeout(this.componentSaveTimeout);
@@ -1418,7 +1504,7 @@ class NaaSApp {
                         const key = `component_${this.componentManager.currentComponent}_temp`;
                         localStorage.setItem(key, JSON.stringify(this.componentManager.componentData[this.componentManager.currentComponent]));
                     }
-                }, 2000);
+                }, AppConfig.AUTOSAVE_COMPONENT_DEBOUNCE_MS);
             }
         });
     }
@@ -1537,11 +1623,11 @@ class NaaSApp {
             setTimeout(() => {
                 announceElement.textContent = message;
 
-                // Clear after 5 seconds to prevent accumulation
+                // Clear after delay to prevent accumulation
                 setTimeout(() => {
                     announceElement.textContent = '';
-                }, 5000);
-            }, 100);
+                }, AppConfig.SCREEN_READER_ANNOUNCEMENT_CLEAR_MS);
+            }, AppConfig.VIEW_TRANSITION_DELAY_MS);
         }
     }
 
@@ -1557,9 +1643,9 @@ class NaaSApp {
             }
         });
 
-        // Limit total notifications to 3
+        // Limit total notifications
         const allNotifications = document.querySelectorAll('.notification-container');
-        if (allNotifications.length >= 3) {
+        if (allNotifications.length >= AppConfig.MAX_NOTIFICATION_COUNT) {
             // Remove oldest notification
             allNotifications[0]?.remove();
         }
@@ -1575,8 +1661,14 @@ class NaaSApp {
         // Add stacking offset for multiple notifications
         const existingCount = document.querySelectorAll('.notification-container').length;
         if (existingCount > 0) {
-            notification.style.top = `${1 + (existingCount * 5)}rem`;
+            notification.style.top = `${1 + (existingCount * AppConfig.NOTIFICATION_STACK_OFFSET_REM)}rem`;
         }
+
+        // Sanitize message before inserting into DOM to prevent XSS attacks
+        const sanitizedMessage = DOMPurify ? DOMPurify.sanitize(message, {
+            ALLOWED_TAGS: [],  // Strip all HTML tags
+            KEEP_CONTENT: true  // Keep text content
+        }) : String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         notification.innerHTML = `
             <div class="flex items-center max-w-sm">
@@ -1586,7 +1678,7 @@ class NaaSApp {
                     type === 'warning' ? 'exclamation-triangle' :
                     'info-circle'
                 } mr-2 flex-shrink-0"></i>
-                <span class="notification-message flex-grow">${message}</span>
+                <span class="notification-message flex-grow">${sanitizedMessage}</span>
                 <button onclick="this.closest('.notification-container').remove()" class="ml-2 text-white hover:text-gray-200 flex-shrink-0">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1602,12 +1694,16 @@ class NaaSApp {
         }, 10);
 
         // Auto remove after appropriate time based on type
-        const autoRemoveTime = type === 'error' ? 8000 : type === 'warning' ? 6000 : 4000;
+        const autoRemoveTime = type === 'error'
+            ? AppConfig.NOTIFICATION_AUTO_REMOVE_ERROR_MS
+            : type === 'warning'
+                ? AppConfig.NOTIFICATION_AUTO_REMOVE_WARNING_MS
+                : AppConfig.NOTIFICATION_AUTO_REMOVE_SUCCESS_MS;
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.style.transform = 'translateX(100%)';
                 notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
+                setTimeout(() => notification.remove(), AppConfig.LOADING_FADE_OUT_MS);
             }
         }, autoRemoveTime);
     }
@@ -1669,7 +1765,7 @@ class NaaSApp {
                     loadingIndicator.style.display = 'none';
                     loadingIndicator.classList.add('hidden');
                     loadingIndicator.style.opacity = '1'; // Reset for next use
-                }, 300);
+                }, AppConfig.LOADING_FADE_OUT_MS);
             }
         } catch (error) {
             console.error('Error hiding loading indicator:', error);
@@ -1681,8 +1777,8 @@ class NaaSApp {
         // Auto-save configuration
         this.autoSave = {
             enabled: true,
-            interval: 5000, // 5 seconds
-            debounceTime: 1000, // 1 second debounce
+            interval: AppConfig.AUTOSAVE_INTERVAL_MS,
+            debounceTime: AppConfig.AUTOSAVE_DEBOUNCE_MS,
             lastSave: {},
             pendingChanges: new Set(),
             intervalId: null
@@ -1711,26 +1807,26 @@ class NaaSApp {
 
     setupAutoSaveEventListeners() {
         // Save on form input changes
-        document.addEventListener('input', (e) => {
+        this.addManagedEventListener(document, 'input', (e) => {
             if (e.target.matches('input, select, textarea')) {
                 this.markForAutoSave('form-data');
             }
         });
 
         // Save on component configuration changes
-        document.addEventListener('change', (e) => {
+        this.addManagedEventListener(document, 'change', (e) => {
             if (e.target.matches('[data-component], [data-config]')) {
                 this.markForAutoSave('component-config');
             }
         });
 
         // Save before navigation
-        window.addEventListener('beforeunload', () => {
+        this.addManagedEventListener(window, 'beforeunload', () => {
             this.performImmediateAutoSave();
         });
 
         // Save when page becomes hidden
-        document.addEventListener('visibilitychange', () => {
+        this.addManagedEventListener(document, 'visibilitychange', () => {
             if (document.hidden) {
                 this.performImmediateAutoSave();
             }
@@ -1876,7 +1972,7 @@ class NaaSApp {
 
         setTimeout(() => {
             indicator.style.opacity = '0';
-        }, 2000);
+        }, AppConfig.AUTOSAVE_INDICATOR_DISPLAY_MS);
     }
 
     async restoreAutoSavedData() {
@@ -1915,8 +2011,8 @@ class NaaSApp {
             if (savedData && savedData.data && this.quoteWizard) {
                 const timeDiff = Date.now() - (savedData.timestamp || 0);
 
-                // Only restore if data is less than 24 hours old
-                if (timeDiff < 24 * 60 * 60 * 1000) {
+                // Only restore if data is not expired
+                if (timeDiff < AppConfig.AUTOSAVE_DATA_EXPIRY_MS) {
                     this.quoteWizard.wizardData = savedData.data;
                     this.quoteWizard.currentStep = savedData.currentStep || 0;
 
@@ -1943,7 +2039,7 @@ class NaaSApp {
             if (savedData && savedData.data && this.componentManager) {
                 const timeDiff = Date.now() - (savedData.timestamp || 0);
 
-                if (timeDiff < 24 * 60 * 60 * 1000) {
+                if (timeDiff < AppConfig.AUTOSAVE_DATA_EXPIRY_MS) {
                     this.componentManager.componentData = savedData.data;
                     this.componentManager.selectedComponent = savedData.selectedComponent;
 
@@ -1970,8 +2066,8 @@ class NaaSApp {
             if (savedState) {
                 const timeDiff = Date.now() - (savedState.timestamp || 0);
 
-                // Only restore state if less than 1 hour old and same session
-                if (timeDiff < 60 * 60 * 1000 && savedState.url === window.location.href) {
+                // Only restore state if not expired and same session
+                if (timeDiff < AppConfig.APP_STATE_EXPIRY_MS && savedState.url === window.location.href) {
                     // Could restore view state here if needed
                     console.log('App state information available:', savedState.viewSpecific);
                 }
@@ -2026,14 +2122,14 @@ class NaaSApp {
         if (!this.liveUpdates) return;
 
         try {
-            // Update dashboard prices every 30 seconds (with proper tracking)
+            // Update dashboard prices periodically (with proper tracking)
             const dashboardInterval = this.setManagedInterval(() => {
                 if (this.currentView === 'dashboard') {
                     this.updateDashboardPricing();
                 }
-            }, 30000);
+            }, AppConfig.DASHBOARD_UPDATE_INTERVAL_MS);
 
-            // Auto-save wizard data every 10 seconds (with proper tracking)
+            // Auto-save wizard data periodically (with proper tracking)
             const wizardSaveInterval = this.setManagedInterval(() => {
                 if (this.currentView === 'wizard' && this.quoteWizard && this.quoteWizard.wizardData) {
                     const hasData = Object.keys(this.quoteWizard.wizardData).some(key =>
@@ -2059,7 +2155,7 @@ class NaaSApp {
                         }
                     }
                 }
-            }, 10000);
+            }, AppConfig.WIZARD_AUTOSAVE_INTERVAL_MS);
 
             console.log('NaaSApp: Live updates started with proper resource tracking');
 
@@ -2145,6 +2241,15 @@ class NaaSApp {
 
             if (this.importExportManager && typeof this.importExportManager.destroy === 'function') {
                 this.importExportManager.destroy();
+            }
+
+            // Clean up extracted managers
+            if (this.viewManager && typeof this.viewManager.destroy === 'function') {
+                this.viewManager.destroy();
+            }
+
+            if (this.autoSaveManager && typeof this.autoSaveManager.destroy === 'function') {
+                this.autoSaveManager.destroy();
             }
 
             console.log('NaaSApp: Cleanup complete');
@@ -2237,7 +2342,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.errorCount++;
 
             // If too many errors, could disable some features
-            if (window.errorCount > 10) {
+            if (window.errorCount > AppConfig.MAX_ERROR_COUNT_THRESHOLD) {
                 console.warn('High error count detected, consider disabling some features');
                 if (app && app.liveUpdates) {
                     app.toggleLiveUpdatesFixed?.();
