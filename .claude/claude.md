@@ -254,3 +254,135 @@ Expert in building voice interfaces, speech recognition, and text-to-speech syst
 Build full-stack applications with Supabase (PostgreSQL, Auth, Storage, Real-time, Edge Functions). Use when implementing authentication, database design with RLS, file storage, real-time features, or serverless functions.
 
 **Location:** `https://raw.githubusercontent.com/daffy0208/ai-dev-standards/main/SKILLS/supabase-developer/SKILL.md`
+
+### api-integration-builder
+
+Build reliable third-party API integrations including OAuth, webhooks, rate limiting, error handling, and data sync. Use when integrating with external services (Slack, Stripe, Gmail, etc.), building API connections, handling webhooks, or implementing OAuth flows.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/api-integration-builder/SKILL.md`
+
+### asset-manager
+
+Organize design assets, optimize images and fonts, maintain brand asset libraries, implement version control for assets, and enforce naming conventions. Keep design assets organized and production-ready.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/asset-manager/SKILL.md`
+
+### bmad-method
+
+Business Model and Architecture Design methodology for aligning technical architecture with business model sustainability and scalability
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/bmad-method/SKILL.md`
+
+### capability-graph-builder
+
+Build queryable capability graphs from manifests using Codex for relationship inference between skills, resources, and capabilities.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/capability-graph-builder/SKILL.md`
+
+### customer-feedback-analyzer
+
+Synthesize user feedback from multiple channels and identify patterns to inform product decisions. Use when analyzing feedback, prioritizing feature requests, conducting NPS surveys, or understanding user sentiment. Covers feedback collection, categorization, prioritization frameworks, and closing the feedback loop.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/customer-feedback-analyzer/SKILL.md`
+
+### customer-support-builder
+
+Build scalable customer support systems including help centers, chatbots, ticketing systems, and self-service knowledge bases. Use when designing support infrastructure, reducing support load, improving customer satisfaction, or scaling support without linear hiring.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/customer-support-builder/SKILL.md`
+
+### figma-developer
+
+Extract components from Figma, convert designs to React components, sync design tokens, and generate code from designs. Bridge the gap between design and code with automated workflows.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/figma-developer/SKILL.md`
+
+### framework-orchestrator
+
+Meta-skill that coordinates all frameworks and skills throughout the project lifecycle, providing intelligent sequencing based on project patterns
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/framework-orchestrator/SKILL.md`
+
+### growth-experimenter
+
+Run systematic growth experiments to increase acquisition, activation, retention, and revenue. Use when optimizing conversion funnels, running A/B tests, improving metrics, or when users mention growth, experimentation, optimization, or scaling user acquisition.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/growth-experimenter/SKILL.md`
+
+### manifest-generator
+
+Auto-generate capability manifests from skill/MCP descriptions using Codex-powered semantic analysis and structured extraction.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/manifest-generator/SKILL.md`
+
+### orchestration-planner
+
+Plan multi-step workflows using capability graph and Codex-powered goal decomposition with HTN-style hierarchical task planning.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/orchestration-planner/SKILL.md`
+
+### pricing-strategist
+
+Design and optimize pricing strategies for SaaS products including tiering, packaging, value metrics, and experimentation. Use when setting initial pricing, optimizing conversion, expanding revenue, or when users ask about pricing strategy, monetization, or revenue optimization.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/pricing-strategist/SKILL.md`
+
+### product-analyst
+
+Track user metrics and provide data-driven insights for product decisions. Use when measuring product health, analyzing user behavior, conducting cohort analysis, or optimizing key metrics. Covers acquisition, engagement, retention, revenue metrics, and data-driven decision making.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/product-analyst/SKILL.md`
+
+### product-analytics
+
+Measure what matters with proper event tracking, funnels, cohorts, and metrics. Use when setting up analytics, tracking features, or understanding behavior.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/product-analytics/SKILL.md`
+
+### prototype-designer
+
+Create interactive prototypes, design user flows, implement prototype testing strategies, and manage handoff to development. Validate ideas before building.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/prototype-designer/SKILL.md`
+
+### prp-generator
+
+Guides creation of Product Requirements Prompts (PRPs) - comprehensive requirement documents that serve as the foundation for AI-assisted development
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/prp-generator/SKILL.md`
+
+### quality-assurance
+
+Comprehensive quality assurance combining testing strategy, code quality enforcement, and validation gates. Consolidated from testing-strategist, code-quality-enforcer, and validation-gate-checker.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/quality-assurance/SKILL.md`
+
+### release-manager
+
+Ship features safely with progressive rollouts, feature flags, and canary deployments. Use when deploying risky features or need gradual rollouts.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/release-manager/SKILL.md`
+
+### security-architect
+
+Comprehensive security architecture combining threat modeling, security-first design, secure coding review, and compliance validation. Consolidated from threat-modeling, security-first-design, secure-coding-review, and compliance-validator.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/security-architect/SKILL.md`
+
+### skill-validator
+
+Validates that a skill or MCP implementation matches its manifest by running Codex-powered semantic comparisons across descriptions, preconditions, effects, and API surface.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/skill-validator/SKILL.md`
+
+### system-diagnostician
+
+Performs Codex-assisted project health diagnostics, identifies capability gaps, and produces prioritized improvement plans.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/system-diagnostician/SKILL.md`
+
+### usability-tester
+
+Conduct usability tests and identify UX issues through systematic observation. Use when testing user flows, validating designs, identifying friction points, or ensuring users can complete core tasks. Covers test planning, think-aloud protocol, task scenarios, and severity rating.
+
+**Location:** `/home/runner/ai-dev-standards/SKILLS/usability-tester/SKILL.md`
