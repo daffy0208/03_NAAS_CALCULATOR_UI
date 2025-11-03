@@ -42,6 +42,14 @@
       ],
       "env": {}
     },
+    "Brain MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/brain-mcp"
+      ],
+      "env": {},
+      "description": "Intelligent orchestration and repository management system from ai-dev-standards"
+    },
     "Asset Optimizer MCP": {
       "command": "node",
       "args": [
