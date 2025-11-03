@@ -42,6 +42,13 @@
       ],
       "env": {}
     },
+    "Brain MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/brain-mcp"
+      ],
+      "env": {}
+    },
     "Asset Optimizer MCP": {
       "command": "node",
       "args": [
@@ -249,6 +256,104 @@
       "command": "node",
       "args": [
         "/MCP-SERVERS/wireframe-generator-mcp"
+      ],
+      "env": {}
+    },
+    "Icon Library MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/icon-library-mcp"
+      ],
+      "env": {}
+    },
+    "Font Optimizer MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/font-optimizer-mcp"
+      ],
+      "env": {}
+    },
+    "Image Generator MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/image-generator-mcp"
+      ],
+      "env": {}
+    },
+    "SVG Generator MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/svg-generator-mcp"
+      ],
+      "env": {}
+    },
+    "Illustration Generator MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/illustration-generator-mcp"
+      ],
+      "env": {}
+    },
+    "Figma Sync MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/figma-sync-mcp"
+      ],
+      "env": {}
+    },
+    "Design Handoff MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/design-handoff-mcp"
+      ],
+      "env": {}
+    },
+    "Theme Builder MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/theme-builder-mcp"
+      ],
+      "env": {}
+    },
+    "Dark Mode Converter MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/dark-mode-converter-mcp"
+      ],
+      "env": {}
+    },
+    "Storybook Generator MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/storybook-generator-mcp"
+      ],
+      "env": {}
+    },
+    "Props Documenter MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/props-documenter-mcp"
+      ],
+      "env": {}
+    },
+    "Typography Analyzer MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/typography-analyzer-mcp"
+      ],
+      "env": {}
+    },
+    "Asset Library MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/asset-library-mcp"
+      ],
+      "env": {}
+    },
+    "Responsive Preview MCP": {
+      "command": "node",
+      "args": [
+        "/MCP-SERVERS/responsive-preview-mcp"
       ],
       "env": {}
     }
