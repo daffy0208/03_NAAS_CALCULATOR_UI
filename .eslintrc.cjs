@@ -17,6 +17,8 @@ module.exports = {
   ],
   rules: {
     // Security rules
+    // Note: Object injection warnings downgraded to 'warn' due to many false positives
+    // from dynamic property access patterns used throughout the codebase (e.g., component[type])
     'security/detect-object-injection': 'warn',
     'security/detect-non-literal-regexp': 'warn',
     'security/detect-eval-with-expression': 'error',

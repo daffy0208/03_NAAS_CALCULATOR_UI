@@ -141,6 +141,9 @@ describe('CalculationOrchestrator', () => {
             }
 
             async executeCalculation(componentType) {
+                // Note: This method name construction logic mirrors the actual implementation
+                // in src/core/calculation-orchestrator.js. If the naming convention changes
+                // in the real code, these tests should be updated accordingly.
                 const methodName = `calculate${componentType.charAt(0).toUpperCase()}${componentType.slice(1)}`;
                 if (typeof this.calculator[methodName] === 'function') {
                     return this.calculator[methodName]();
